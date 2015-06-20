@@ -2,6 +2,7 @@
 *.o
 
 #Output files
+telepresenced
+telepresence-client
 telepresence-pololu
 telepresence-raspi
-telepresenced

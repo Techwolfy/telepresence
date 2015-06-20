@@ -38,7 +38,7 @@ Joystick::Joystick(const char *file) : joyFD(),
 	ioctl(joyFD, JSIOCGBUTTONS, &numButtons);
 	//Allocate and zero-initialize arrays for joystick data
 	axes = (int *)calloc(numAxes, sizeof(int));
-	buttons = (char *)calloc(numButtons, sizeof(char));
+	buttons = (bool *)calloc(numButtons, sizeof(bool));
 }
 
 //Destructor
@@ -48,7 +48,7 @@ Joystick::~Joystick() {
 	close(joyFD);
 }
 
-void Joystick::update() {	
+void Joystick::update() {
 	if(read(joyFD, &joyEvent, sizeof(struct js_event)) == -1) {
 		return;
 	}

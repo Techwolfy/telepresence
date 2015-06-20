@@ -6,7 +6,7 @@
 #include "RPMSerialInterface.h"
 
 //Declaration
-class Pololu : Motor {
+class Pololu : private Motor {
 public:
 	//Constructor
 	Pololu();

@@ -7,17 +7,20 @@
 #include <string.h>
 #include "telepacket.h"
 #include "lib/super_sock.h"
-#include "mod/joystick.h"
-#include "mod/motor.h"
 
-#ifdef DUMMY
-	#include "mod/dummyMotor.h"
-#elif POLOLU
+#ifdef JOYSTICK
+	#include "mod/joystick.h"
+#else
+	#include "mod/dummyJoystick.h"
+#endif
+
+#include "mod/motor.h"
+#ifdef POLOLU
 	#include "mod/pololu.h"
 #elif RASPI
 	#include "mod/raspi.h"
 #else
-	#error "Use -DDUMMY for a dummy motor, -DPOLOLU for a 6-port Pololu device, or -DRASPI for a Raspberry Pi."
+	#include "mod/dummyMotor.h"
 #endif
 
 void server(SuperSock &s);
@@ -132,7 +135,11 @@ void client(SuperSock &s) {
 	out.frameNum = 0;
 	out.isClient = true;
 
+#ifdef JOYSTICK
 	Joystick joy;
+#else
+	DummyJoystick joy;
+#endif
 
 	out.numAxes = joy.getNumAxes();
 	out.controls = (double *)calloc(joy.getNumAxes() + joy.getNumButtons(), sizeof(double));	//TODO: Will this send the array or the pointer?
@@ -157,14 +164,13 @@ void client(SuperSock &s) {
 
 void robot(SuperSock &s) {
 	TelePacket data;
-#ifdef DUMMY
-	DummyMotor motor;
-#elif POLOLU
+
+#ifdef POLOLU
 	Pololu motor;
 #elif RASPI
 	RasPi motor;
 #else
-	#error "Use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi. Other options are currently unsupported."
+	DummyMotor motor;
 #endif
 
 	//Main robot loop

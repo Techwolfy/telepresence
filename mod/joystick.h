@@ -23,14 +23,14 @@ public:
 	double getAxis(int axis);
 	bool getButton(int button);
 
-private:
+protected:
 	//Variables
 	int joyFD;
 	struct js_event joyEvent;
 	int numAxes;
 	int numButtons;
 	int *axes;
-	char *buttons;
+	bool *buttons;
 
 	//Functions
 	void update();

@@ -5,7 +5,7 @@
 #include "motor.h"
 
 //Declaration
-class RasPi : Motor {
+class RasPi : private Motor {
 public:
 	//Constructor
 	RasPi();

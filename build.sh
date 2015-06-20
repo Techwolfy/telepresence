@@ -1,10 +1,22 @@
 #!/bin/sh
+#Build script for telepresence
+#Defaults to dummy joystick; use -DJOYSTICK for a standard joystick.
+#Defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi.
+
+CC="g++"
+OPTIONS="-std=c++11"
+INCLUDE="-I. -Ilib/*.h -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib"
+LIBS="-lrt -lwiringPi -lRapaPololuMaestro"
+FILES="telepresence.cpp lib/*.cpp mod/*.cpp"
 
 #telepresenced
-g++ -std=c++11 -DDUMMY -o telepresenced telepresence.cpp lib/*.cpp mod/*.cpp -I. -Ilib/*.h -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib -lrt -lwiringPi -lRapaPololuMaestro
+${CC} ${OPTIONS} -o telepresenced ${FILES} ${INCLUDE} ${LIBS}
+
+#telepresence-client
+${CC} ${OPTIONS} -DJOYSTICK -o telepresence-client ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-pololu
-g++ -std=c++11 -DPOLOLU -o telepresence-pololu telepresence.cpp lib/*.cpp mod/*.cpp -I. -Ilib/*.h -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib -lrt -lwiringPi -lRapaPololuMaestro
+${CC} ${OPTIONS} -DPOLOLU -o telepresence-pololu ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-raspi
-g++ -std=c++11 -DRASPI -o telepresence-raspi telepresence.cpp lib/*.cpp mod/*.cpp -I. -Ilib/*.h -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib -lrt -lwiringPi -lRapaPololuMaestro
+${CC} ${OPTIONS} -DRASPI -o telepresence-raspi ${FILES} ${INCLUDE} ${LIBS}

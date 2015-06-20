@@ -5,7 +5,7 @@
 #include "motor.h"
 
 //Declaration
-class DummyMotor : Motor {
+class DummyMotor : private Motor {
 public:
 	//Constructor
 	DummyMotor();
