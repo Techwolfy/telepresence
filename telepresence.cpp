@@ -29,6 +29,7 @@ void robot(SuperSock &s);
 void help();
 TelePacket getData(SuperSock &s);
 void sendData(SuperSock &s, TelePacket &data);
+void printData(TelePacket &data);
 
 int main(int argc, char *argv[]) {
 	bool isClient = false;
@@ -110,15 +111,13 @@ void server(SuperSock &s) {
 	while(true) {
 		//Get data from client
 		data = getData(s);
-		if(data.head[0] != 'T') {
+		if(data.head != 'T') {
 			usleep(5000);
 			continue;
 		}
+
 		if(data.isClient) {	//Data recieved from client
-			printf("Client frame: %d\n", data.frameNum);
-			for(int i = 0; i < (sizeof(data.controls) / sizeof(double)); i++) {
-				printf("Control %d: %f\n", i, data.controls[i]);
-			}
+			printData(data);
 		} else {
 			//The robot doesn't currently send any data, so ignore this.
 		}
@@ -141,25 +140,20 @@ void client(SuperSock &s) {
 	DummyJoystick joy;
 #endif
 
-	out.numAxes = joy.getNumAxes();
-	out.controls = (double *)calloc(joy.getNumAxes() + joy.getNumButtons(), sizeof(double));	//TODO: Will this send the array or the pointer?
-
 	//Main client loop
 	while(true) {
 		//Send joystick data to robot
 		out.frameNum++;
-		for(int i = 0; i < joy.getNumAxes(); i++) {
-			out.controls[i] = joy.getAxis(i);
+		for(int i = 0; i < joy.getNumAxes() && i < TelePacket::NUM_AXES; i++) {
+			out.axes[i] = joy.getAxis(i);
 		}
-		for(int i = joy.getNumAxes(); i < (joy.getNumAxes() + joy.getNumButtons()); i++) {
-			out.controls[i] = joy.getButton(i - joy.getNumAxes()) ? 1.0 : 0.0;
+		for(int i = 0; i < joy.getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
+			out.buttons[i] = joy.getButton(i);
 		}
 		sendData(s, out);
 
 		usleep(5000); //0.005 seconds
 	}
-
-	free(out.controls);
 }
 
 void robot(SuperSock &s) {
@@ -177,21 +171,18 @@ void robot(SuperSock &s) {
 	while(true) {
 		//Get control data from server
 		data = getData(s);
-		if(data.head[0] != 'T') {
+		if(data.head != 'T') {
 			usleep(5000);
 			continue;
 		}
+
 		if(data.isClient) {	//Data recieved from client
-			printf("Client frame: %d\n", data.frameNum);
-			for(int i = 0; i < (sizeof(data.controls) / sizeof(double)); i++) {
-				printf("Control %d: %f\n", i, data.controls[i]);
-			}
-			motor.control(data.controls);
+			printData(data);
+			motor.control(data.axes);
 		}
 
 		usleep(5000); //0.005 seconds
-	}
-	
+	}	
 }
 
 void help() {
@@ -206,11 +197,21 @@ void help() {
 
 TelePacket getData(SuperSock &s) {
 	TelePacket data;
-	data.head[0] = '\0';
+	data.head = '\0';
 	s.read_timeout((unsigned char*)&data, sizeof(data), 10000);
 	return data;
 }
 
 void sendData(SuperSock &s, TelePacket &data) {
 	s.write_timeout((unsigned char*)&data, sizeof(data), 10000);
+}
+
+void printData(TelePacket &data) {
+	printf("Client frame: %d\n", data.frameNum);
+	for(int i = 0; i < TelePacket::NUM_AXES; i++) {
+		printf("Axis %d: %f\n", i, data.axes[i]);
+	}
+	for(int i = 0; i < TelePacket::NUM_BUTTONS; i++) {
+		printf("Button %d: %c\n", i, data.buttons[i] ? 'T' : 'F');
+	}
 }
