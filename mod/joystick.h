@@ -3,8 +3,9 @@
 
 //Includes
 #include <linux/joystick.h>
+#include "input.h"
 
-class Joystick {
+class Joystick : private Input {
 public:
 	//Constructor
 	Joystick();
@@ -17,13 +18,15 @@ public:
 	//Functions
 	int getNumButtons();
 	int getNumAxes();
-	double getX();
-	double getY();
-	double getZ();
 	double getAxis(int axis);
 	bool getButton(int button);
 
-protected:
+	//Variables
+	const static int JOY_X_AXIS;
+	const static int JOY_Y_AXIS;
+	const static int JOY_Z_AXIS;
+
+private:
 	//Variables
 	int joyFD;
 	struct js_event joyEvent;

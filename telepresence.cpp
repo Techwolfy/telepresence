@@ -8,6 +8,7 @@
 #include "telepacket.h"
 #include "lib/super_sock.h"
 
+#include "mod/input.h"
 #ifdef JOYSTICK
 	#include "mod/joystick.h"
 #else
