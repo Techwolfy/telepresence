@@ -1,0 +1,7 @@
+#Object files
+*.o
+
+#Output files
+telepresence-pololu
+telepresence-raspi
+telepresenced
