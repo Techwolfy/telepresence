@@ -10,13 +10,17 @@ LIBS="-lrt -lwiringPi -lRapaPololuMaestro"
 FILES="telepresence.cpp lib/*.cpp mod/*.cpp"
 
 #telepresenced
+echo "Building telepresenced..."
 ${CC} ${OPTIONS} -o telepresenced ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-client
+echo "Building telepresence-client..."
 ${CC} ${OPTIONS} -DJOYSTICK -o telepresence-client ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-pololu
+echo "Building telepresence-pololu..."
 ${CC} ${OPTIONS} -DPOLOLU -o telepresence-pololu ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-raspi
+echo "Building telepresence-raspi..."
 ${CC} ${OPTIONS} -DRASPI -o telepresence-raspi ${FILES} ${INCLUDE} ${LIBS}
