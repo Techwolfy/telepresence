@@ -10,14 +10,17 @@
 #include "mod/joystick.h"
 #include "mod/motor.h"
 
-#ifdef POLOLU
+#ifdef DUMMY
+	#include "mod/dummyMotor.h"
+#elif POLOLU
 	#include "mod/pololu.h"
 #elif RASPI
 	#include "mod/raspi.h"
 #else
-	#error "Use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi. Other options are currently unsupported."
+	#error "Use -DDUMMY for a dummy motor, -DPOLOLU for a 6-port Pololu device, or -DRASPI for a Raspberry Pi."
 #endif
 
+void server(SuperSock &s);
 void client(SuperSock &s);
 void robot(SuperSock &s);
 void help();
@@ -26,19 +29,25 @@ void sendData(SuperSock &s, TelePacket &data);
 
 int main(int argc, char *argv[]) {
 	bool isClient = false;
+	bool isRobot = false;
 	char address[16];
 	char port[6];
 	SuperSock s;
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt (argc, argv, "hvcr")) != -1) {
+	while((c = getopt (argc, argv, "hvscr")) != -1) {
 		switch(c) {
+			case 's':	//Server mode
+				isClient = false;
+				isRobot = false;
 			case 'c':	//Client mode
 				isClient = true;
+				isRobot = false;
 				break;
 			case 'r':	//Robot mode
 				isClient = false;
+				isRobot = true;
 				break;
 			case '?':
 				printf("Unknown option `%c'.\n", optopt);
@@ -60,9 +69,15 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 	} else {
-		printf("Missing address / port! Using defaults (127.0.0.1:8353).\n");
-		sprintf(address, "127.0.0.1");
-		sprintf(port, "8353");
+		if(!isClient && !isRobot) {
+			printf("Missing address / port! Using defaults (0.0.0.0:8353).\n");
+			sprintf(address, "0.0.0.0");
+			sprintf(port, "8353");
+		} else {
+			printf("Missing address / port! Using defaults (127.0.0.1:8353).\n");
+			sprintf(address, "127.0.0.1");
+			sprintf(port, "8353");
+		}
 	}
 
 	//Init socket
@@ -74,13 +89,42 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Start main program loop
-	if(isClient) {
+	if(!isClient && !isRobot) {
+		server(s);
+	} else if(isClient) {
 		client(s);
 	} else {
 		robot(s);
 	}
 
 	return 0;
+}
+
+void server(SuperSock &s) {
+	TelePacket data;
+
+	//Main server loop
+	while(true) {
+		//Get data from client
+		data = getData(s);
+		if(data.head[0] != 'T') {
+			usleep(5000);
+			continue;
+		}
+		if(data.isClient) {	//Data recieved from client
+			printf("Client frame: %d\n", data.frameNum);
+			for(int i = 0; i < (sizeof(data.controls) / sizeof(double)); i++) {
+				printf("Control %d: %f\n", i, data.controls[i]);
+			}
+		} else {
+			//The robot doesn't currently send any data, so ignore this.
+		}
+
+		//Send data to robot
+		sendData(s, data);
+
+		usleep(5000); //0.005 seconds
+	}
 }
 
 void client(SuperSock &s) {
@@ -93,7 +137,7 @@ void client(SuperSock &s) {
 	out.numAxes = joy.getNumAxes();
 	out.controls = (double *)calloc(joy.getNumAxes() + joy.getNumButtons(), sizeof(double));	//TODO: Will this send the array or the pointer?
 
-	//Main robot loop
+	//Main client loop
 	while(true) {
 		//Send joystick data to robot
 		out.frameNum++;
@@ -113,8 +157,9 @@ void client(SuperSock &s) {
 
 void robot(SuperSock &s) {
 	TelePacket data;
-
-#ifdef POLOLU
+#ifdef DUMMY
+	DummyMotor motor;
+#elif POLOLU
 	Pololu motor;
 #elif RASPI
 	RasPi motor;
@@ -138,16 +183,17 @@ void robot(SuperSock &s) {
 			motor.control(data.controls);
 		}
 
-		usleep(5000); //0.005 seconds		
+		usleep(5000); //0.005 seconds
 	}
 	
 }
 
 void help() {
 	printf("Telepresence client v1.0.0 by Daniel Ring\n");
-	printf("Usage:\n");
+	printf("Usage: telepresence [options] address:port\n");
 	printf("-h\tPrints this help message.\n");
 	printf("-v\tPrints this version message.\n");
+	printf("-s\tRun in server mode (relaying data).\n");
 	printf("-c\tRun in client mode (controlling a robot).\n");
 	printf("-r\tRun in robot mode (controlled by a client).\n");
 }
