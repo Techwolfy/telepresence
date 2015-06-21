@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "telepacket.h"
-#include "lib/super_sock.h"
+#include "udpsocket.h"
 
 #include "mod/input.h"
 #ifdef JOYSTICK
@@ -24,20 +26,19 @@
 	#include "mod/dummyMotor.h"
 #endif
 
-void server(SuperSock &s);
-void client(SuperSock &s);
-void robot(SuperSock &s);
+void server(UDPSocket *s, TelePacket *data);
+void client(UDPSocket *s, TelePacket *data);
+void robot(UDPSocket *s, TelePacket *data);
 void help();
-TelePacket getData(SuperSock &s);
-void sendData(SuperSock &s, TelePacket &data);
-void printData(TelePacket &data);
+void printData(TelePacket *data);
 
 int main(int argc, char *argv[]) {
 	bool isClient = false;
 	bool isRobot = false;
 	char address[16];
 	char port[6];
-	SuperSock s;
+	UDPSocket s;
+	TelePacket data;
 
 	//Process command-line options
 	int c = 0;
@@ -88,54 +89,58 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Init socket
-	if(s.init(port, address)) {
-		printf("Socket initialized.\n");
-	} else {
+	if(s.openSocket(address, port) < 0) {
 		printf("Socket initialization failed!\n");
 		return -1;
+	} else {
+		printf("Socket initialized.\n");
 	}
 
 	//Start main program loop
 	if(!isClient && !isRobot) {
-		server(s);
+		server(&s, &data);
 	} else if(isClient) {
-		client(s);
+		client(&s, &data);
 	} else {
-		robot(s);
+		robot(&s, &data);
 	}
 
 	return 0;
 }
 
-void server(SuperSock &s) {
-	TelePacket data;
+void server(UDPSocket *s, TelePacket *data) {
+	struct sockaddr_in *robotAddress;
+	struct sockaddr_in *clientAddress;
+	struct sockaddr_in *unknownAddress;
 
 	//Main server loop
 	while(true) {
-		//Get data from client
-		data = getData(s);
-		if(data.head != 'T') {
+		//Get data from stream
+		data->head = '\0';
+		unknownAddress = s->readData((void *)data, sizeof(*data));
+		if(unknownAddress == NULL || data->head != 'T') {
 			usleep(5000);
 			continue;
 		}
 
-		if(data.isClient) {	//Data recieved from client
+		if(data->isClient) {	//Data recieved from client
+			clientAddress = unknownAddress;
 			printData(data);
 		} else {
-			//The robot doesn't currently send any data, so ignore this.
+			robotAddress = unknownAddress;
+			//The robot doesn't currently send any useful data.
 		}
 
 		//Send data to robot
-		sendData(s, data);
+		s->writeData(robotAddress, (void *)data, sizeof(*data));
 
 		usleep(5000); //0.005 seconds
 	}
 }
 
-void client(SuperSock &s) {
-	TelePacket out;
-	out.frameNum = 0;
-	out.isClient = true;
+void client(UDPSocket *s, TelePacket *data) {
+	data->frameNum = 0;
+	data->isClient = true;
 
 #ifdef JOYSTICK
 	Joystick joy;
@@ -145,23 +150,23 @@ void client(SuperSock &s) {
 
 	//Main client loop
 	while(true) {
-		//Send joystick data to robot
-		out.frameNum++;
+		//Prepare joystick data for robot
+		data->frameNum++;
 		for(int i = 0; i < joy.getNumAxes() && i < TelePacket::NUM_AXES; i++) {
-			out.axes[i] = joy.getAxis(i);
+			data->axes[i] = joy.getAxis(i);
 		}
 		for(int i = 0; i < joy.getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
-			out.buttons[i] = joy.getButton(i);
+			data->buttons[i] = joy.getButton(i);
 		}
-		sendData(s, out);
+
+		//Send data to robot
+		s->writeData((void *)data, sizeof(*data));
 
 		usleep(5000); //0.005 seconds
 	}
 }
 
-void robot(SuperSock &s) {
-	TelePacket data;
-
+void robot(UDPSocket *s, TelePacket *data) {
 #ifdef POLOLU
 	Pololu motor;
 #elif RASPI
@@ -173,16 +178,19 @@ void robot(SuperSock &s) {
 	//Main robot loop
 	while(true) {
 		//Get control data from server
-		data = getData(s);
-		if(data.head != 'T') {
+		data->head = '\0';
+		s->readData((void *)data, sizeof(*data));
+		if(data->head != 'T') {
 			usleep(5000);
 			continue;
 		}
 
-		if(data.isClient) {	//Data recieved from client
+		if(data->isClient) {	//Data recieved from client
 			printData(data);
-			motor.control(TelePacket::NUM_AXES, data.axes);
+			motor.control(TelePacket::NUM_AXES, data->axes);
 		}
+
+		//TODO: Send some data to the server so it can respond with commands
 
 		usleep(5000); //0.005 seconds
 	}	
@@ -199,23 +207,12 @@ void help() {
 	printf("-r\tRun in robot mode (controlled by a client).\n");
 }
 
-TelePacket getData(SuperSock &s) {
-	TelePacket data;
-	data.head = '\0';
-	s.read_timeout((unsigned char*)&data, sizeof(data), 10000);
-	return data;
-}
-
-void sendData(SuperSock &s, TelePacket &data) {
-	s.write_timeout((unsigned char*)&data, sizeof(data), 10000);
-}
-
-void printData(TelePacket &data) {
-	printf("Client frame: %d\n", data.frameNum);
+void printData(TelePacket *data) {
+	printf("Client frame: %d\n", data->frameNum);
 	for(int i = 0; i < TelePacket::NUM_AXES; i++) {
-		printf("Axis %d: %f\n", i, data.axes[i]);
+		printf("Axis %d: %f\n", i, data->axes[i]);
 	}
 	for(int i = 0; i < TelePacket::NUM_BUTTONS; i++) {
-		printf("Button %d: %c\n", i, data.buttons[i] ? 'T' : 'F');
+		printf("Button %d: %c\n", i, data->buttons[i] ? 'T' : 'F');
 	}
 }

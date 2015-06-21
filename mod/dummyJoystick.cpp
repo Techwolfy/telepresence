@@ -1,4 +1,4 @@
-//Joystick.cpp
+//DummyJoystick.cpp
 
 //Includes
 #include <stdio.h>
@@ -24,6 +24,7 @@ DummyJoystick::~DummyJoystick() {
 	printf("Dummy joystick destroyed.\n");
 }
 
+//Functions
 int DummyJoystick::getNumAxes() {
 	return DUMMY_JOY_AXES;
 }
