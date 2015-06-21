@@ -20,6 +20,9 @@ RasPi::RasPi() {
 		digitalWrite(i, LOW);
 		softPwmCreate(i, 0, 200);	//20ms period
 	}
+
+	//Make sure all motors are stopped
+	stop();
 }
 
 //Destructor
@@ -29,8 +32,8 @@ RasPi::~RasPi() {
 
 //Functions
 //Set power of all motors
-void RasPi::control(double values[]) {
-	for(int i = 0; i < (sizeof(values) / sizeof(double)) && i < 10; i++) {
+void RasPi::control(int numValues, double values[]) {
+	for(int i = 0; i < numValues && i < 10; i++) {
 		//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
 		softPwmWrite(i, scalePower(values[i]));	//TODO: Test, output range may be wrong
 	}

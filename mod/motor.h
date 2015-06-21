@@ -11,7 +11,7 @@ public:
 	~Motor() = default;
 
 	//Functions
-	virtual void control(double values[]) = 0;
+	virtual void control(int numValues, double values[]) = 0;
 	virtual void stop() = 0;
 };
 

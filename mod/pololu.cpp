@@ -19,6 +19,9 @@ Pololu::Pololu(const char *file, int baud) {
 		printf("Pololu initialization failed!\n");
 		//TODO: Throw exception? Probably segfaults on fail right now.
 	}
+
+	//Make sure all motors are stopped
+	stop();
 }
 
 //Destructor
@@ -29,8 +32,8 @@ Pololu::~Pololu() {
 
 //Functions
 //Set power of all motors
-void Pololu::control(double values[]) {
-	for(int i = 0; i < (sizeof(values) / sizeof(double)) && i < 6; i++) {
+void Pololu::control(int numValues, double values[]) {
+	for(int i = 0; i < numValues && i < 6; i++) {
 		pololu->setTargetCP(i, scalePower(values[i]));
 	}
 }
@@ -43,7 +46,7 @@ void Pololu::stop() {
 }
 
 //Scale power from (-1.0, 1.0) to Pololu range of (4000, 8000)
-double scalePower(double power) {
+double Pololu::scalePower(double power) {
 	if(power > 1.0) {
 		power = 1.0;
 	} else if(power < -1.0) {

@@ -14,7 +14,7 @@ public:
 	~DummyMotor();
 
 	//Functions
-	void control(double values[]);
+	void control(int numValues, double values[]);
 	void stop();
 };
 

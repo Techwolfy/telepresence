@@ -16,9 +16,9 @@ DummyMotor::~DummyMotor() {
 
 //Functions
 //Dummy motor; output target values to console
-void DummyMotor::control(double values[]) {
+void DummyMotor::control(int numValues, double values[]) {
 	printf("Dummy motor control() called.\n");
-	for(int i = 0; i < (sizeof(values) / sizeof(double)) && i < 6; i++) {
+	for(int i = 0; i < numValues && i < 6; i++) {
 		printf("Output %d: %f\n", i, values[i]);
 	}
 }

@@ -41,11 +41,13 @@ int main(int argc, char *argv[]) {
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt (argc, argv, "hvscr")) != -1) {
+	while((c = getopt (argc, argv, "hvdscr")) != -1) {
 		switch(c) {
+			case 'd':	//Daemon mode
 			case 's':	//Server mode
 				isClient = false;
 				isRobot = false;
+				break;
 			case 'c':	//Client mode
 				isClient = true;
 				isRobot = false;
@@ -179,7 +181,7 @@ void robot(SuperSock &s) {
 
 		if(data.isClient) {	//Data recieved from client
 			printData(data);
-			motor.control(data.axes);
+			motor.control(TelePacket::NUM_AXES, data.axes);
 		}
 
 		usleep(5000); //0.005 seconds
@@ -191,7 +193,8 @@ void help() {
 	printf("Usage: telepresence [options] address:port\n");
 	printf("-h\tPrints this help message.\n");
 	printf("-v\tPrints this version message.\n");
-	printf("-s\tRun in server mode (relaying data).\n");
+	printf("-d\tRun in server mode (relaying data).\n");
+	printf("-s\tRun in server mode (same as -d).\n");
 	printf("-c\tRun in client mode (controlling a robot).\n");
 	printf("-r\tRun in robot mode (controlled by a client).\n");
 }
