@@ -26,9 +26,9 @@
 	#include "mod/dummyMotor.h"
 #endif
 
-void server(UDPSocket *s, TelePacket *data);
-void client(UDPSocket *s, TelePacket *data);
-void robot(UDPSocket *s, TelePacket *data);
+void server(UDPSocket *s, TelePacket *in, TelePacket *out);
+void client(UDPSocket *s, TelePacket *in, TelePacket *out);
+void robot(UDPSocket *s, TelePacket *in, TelePacket *out);
 void help();
 void printData(TelePacket *data);
 
@@ -38,7 +38,8 @@ int main(int argc, char *argv[]) {
 	char address[16];
 	char port[6];
 	UDPSocket s;
-	TelePacket data;
+	TelePacket in;
+	TelePacket out;
 
 	//Process command-line options
 	int c = 0;
@@ -98,75 +99,108 @@ int main(int argc, char *argv[]) {
 
 	//Start main program loop
 	if(!isClient && !isRobot) {
-		server(&s, &data);
+		server(&s, &in, &out);
 	} else if(isClient) {
-		client(&s, &data);
+		client(&s, &in, &out);
 	} else {
-		robot(&s, &data);
+		robot(&s, &in, &out);
 	}
 
 	return 0;
 }
 
-void server(UDPSocket *s, TelePacket *data) {
-	struct sockaddr_in *robotAddress;
-	struct sockaddr_in *clientAddress;
-	struct sockaddr_in *unknownAddress;
+void server(UDPSocket *s, TelePacket *in, TelePacket *out) {
+	struct sockaddr_in robotAddress;
+	struct sockaddr_in clientAddress;
+	struct sockaddr_in unknownAddress;
+
+	//Set up ping response packet
+	out->frameNum = -1;
+	out->isClient = false;
+	out->isRobot = false;
+	out->ping = true;
 
 	//Main server loop
 	while(true) {
 		//Get data from stream
-		data->head = '\0';
-		unknownAddress = s->readData((void *)data, sizeof(*data));
-		if(unknownAddress == NULL || data->head != 'T') {
+		in->head = '\0';
+		if(s->readData((void *)in, sizeof(*in), &unknownAddress) < 0 || in->head != 'T') {
+			usleep(5000);
+			continue;
+		}
+		if(in->ping) {
+			out->frameNum++;
+			if(in->isClient) {
+				printf("Ping received from client!\n");
+				clientAddress = unknownAddress;
+				s->writeData(&clientAddress, (void *)out, sizeof(*out));
+			} else {
+				printf("Ping received from robot!\n");
+				robotAddress = unknownAddress;
+				s->writeData(&robotAddress, (void *)out, sizeof(*out));
+			}
 			usleep(5000);
 			continue;
 		}
 
-		if(data->isClient) {	//Data recieved from client
-			clientAddress = unknownAddress;
-			printData(data);
+		if(in->isClient) {	//Data recieved from client
+			printData(in);
 		} else {
-			robotAddress = unknownAddress;
-			//The robot doesn't currently send any useful data.
+			printf("Packet %d recieved from robot.\n", in->frameNum);
 		}
 
-		//Send data to robot
-		s->writeData(robotAddress, (void *)data, sizeof(*data));
+		//Send client's data to robot
+		s->writeData(&robotAddress, (void *)in, sizeof(*in));
 
 		usleep(5000); //0.005 seconds
 	}
 }
 
-void client(UDPSocket *s, TelePacket *data) {
-	data->frameNum = 0;
-	data->isClient = true;
-
+void client(UDPSocket *s, TelePacket *in, TelePacket *out) {
 #ifdef JOYSTICK
 	Joystick joy;
 #else
 	DummyJoystick joy;
 #endif
 
+	//Don't block on read, data still needs to be sent to the robot
+	s->blockRead(false);
+
+	//Send initialization packet
+	out->frameNum = 0;
+	out->isClient = true;
+	out->isRobot = false;
+	out->ping = true;
+	s->writeData((void *)out, sizeof(*out));
+	out->ping = false;
+
 	//Main client loop
 	while(true) {
+		//Respond to pings
+		in->head = '\0';
+		if(s->readData((void *)in, sizeof(*in)) > 0 && in->head == 'T') {
+			if(in->ping) {
+				printf("Ping recieved!\n");
+			}
+		}
+
 		//Prepare joystick data for robot
-		data->frameNum++;
+		out->frameNum++;
 		for(int i = 0; i < joy.getNumAxes() && i < TelePacket::NUM_AXES; i++) {
-			data->axes[i] = joy.getAxis(i);
+			out->axes[i] = joy.getAxis(i);
 		}
 		for(int i = 0; i < joy.getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
-			data->buttons[i] = joy.getButton(i);
+			out->buttons[i] = joy.getButton(i);
 		}
 
 		//Send data to robot
-		s->writeData((void *)data, sizeof(*data));
+		s->writeData((void *)out, sizeof(*out));
 
 		usleep(5000); //0.005 seconds
 	}
 }
 
-void robot(UDPSocket *s, TelePacket *data) {
+void robot(UDPSocket *s, TelePacket *in, TelePacket *out) {
 #ifdef POLOLU
 	Pololu motor;
 #elif RASPI
@@ -175,22 +209,31 @@ void robot(UDPSocket *s, TelePacket *data) {
 	DummyMotor motor;
 #endif
 
+	//Send initialization packet
+	out->frameNum = 0;
+	out->isClient = false;
+	out->isRobot = true;
+	out->ping = true;
+	s->writeData((void *)out, sizeof(*out));
+
 	//Main robot loop
 	while(true) {
 		//Get control data from server
-		data->head = '\0';
-		s->readData((void *)data, sizeof(*data));
-		if(data->head != 'T') {
+		in->head = '\0';
+		if(s->readData((void *)in, sizeof(*in)) < 0 || in->head != 'T') {
+			usleep(5000);
+			continue;
+		}
+		if(in->ping) {
+			printf("Ping recieved!\n");
 			usleep(5000);
 			continue;
 		}
 
-		if(data->isClient) {	//Data recieved from client
-			printData(data);
-			motor.control(TelePacket::NUM_AXES, data->axes);
+		if(in->isClient) {	//Data recieved from client
+			printData(in);
+			motor.control(TelePacket::NUM_AXES, in->axes);
 		}
-
-		//TODO: Send some data to the server so it can respond with commands
 
 		usleep(5000); //0.005 seconds
 	}	

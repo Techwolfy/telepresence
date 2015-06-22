@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -16,6 +18,7 @@ const char *UDPSocket::SOCKET_DEFAULT_PORT = "8353";
 
 //Constructor
 UDPSocket::UDPSocket() : serverFD(0),
+						 readFlags(0),
 						 server{0},
 						 client{0} {
 
@@ -71,9 +74,9 @@ int UDPSocket::openSocket(const char *address, const char *port) {
 		printf("Error finding host!\n");
 		return -1;
 	}
-	
+
 	addressNum = *(unsigned long *)host->h_addr_list[0];
-	printf("Host %s:%s found as %lu:%d.\n", address, port, addressNum, portNum);
+	printf("Host %s:%s found as %lu:%d.\n", address, port, ntohl(addressNum), ntohs(portNum));
     return openSocket(addressNum, portNum);
 }
 
@@ -84,27 +87,57 @@ void UDPSocket::closeSocket() {
 	}
 }
 
+//Set whether or not to block when reading or writing data (default: block)
+void UDPSocket::blockRead(bool block) {
+	if(block) {
+		readFlags &= ~MSG_DONTWAIT;
+	} else {
+		readFlags |= MSG_DONTWAIT;
+	}
+}
+
 //Read data from bound socket
-sockaddr_in* UDPSocket::readData(void *data, int length) {
-	socklen_t remoteLength = sizeof(remote);
-	if(recvfrom(serverFD, data, length, 0, (struct sockaddr *)&remote, &remoteLength) <= 0) {
-		printf("Error reading from socket!\n");
-		return NULL;
+int UDPSocket::readData(void *data, int length) {
+	readData(data, length, NULL);
+}
+
+//Read data from bound socket and retrieve remote sender address
+int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
+	socklen_t remoteLength;
+	if(remote != NULL) {
+		remoteLength = sizeof(*remote);
+	} else {
+		remoteLength = 0;
 	}
 
-	return &remote;
+	int readLength = recvfrom(serverFD, data, length, readFlags, (struct sockaddr *)remote, &remoteLength);
+	if(readLength < 0) {
+		if(errno != EAGAIN) {
+			printf("Error reading from socket!\n");
+		}
+		return -1;
+	} else if(readLength != length) {
+		printf("Not enough bytes read from socket!\n");
+		printf("Expected bytes: %d Received bytes: %d\n", length, readLength);
+		return -1;
+	}
+
+	if(remote != NULL) {
+		printf("Packet received from %lu:%d.\n", ntohl(remote->sin_addr.s_addr), ntohs(remote->sin_port));
+	}
+	return readLength;
 }
 
 //Write to client defined when socket opened
 void UDPSocket::writeData(void *data, int length) {
-	if(sendto(serverFD, data, length, 0, (struct sockaddr *)&client, sizeof(client)) < 0) {
-		printf("Error writing to socket!\n");
-	}
+	writeData(&client, data, length);
 }
 
 //Write to arbitrary client
 void UDPSocket::writeData(sockaddr_in *remote, void *data, int length) {
-	if(sendto(serverFD, data, length, 0, (struct sockaddr *)remote, sizeof(&remote)) < 0) {
+	if(sendto(serverFD, data, length, 0, (struct sockaddr *)remote, sizeof(*remote)) < 0) {
 		printf("Error writing to socket!\n");
+	} else {
+		printf("Packet sent to %lu:%d.\n", ntohl(remote->sin_addr.s_addr), ntohs(remote->sin_port));
 	}
 }

@@ -17,7 +17,9 @@ public:
 	//Functions
 	int openSocket(const char *address, const char *port);
 	void closeSocket();
-	sockaddr_in* readData(void *data, int length);
+	void blockRead(bool block);
+	int readData(void *data, int length);
+	int readData(void *data, int length, sockaddr_in *remote);
 	void writeData(void *data, int length);
 	void writeData(sockaddr_in *remote, void *data, int length);
 
@@ -29,9 +31,9 @@ public:
 private:
 	//Variables
 	int serverFD;
+	int readFlags;
 	struct sockaddr_in server;
 	struct sockaddr_in client;
-	struct sockaddr_in remote;
 
 	//Functions
 	int openSocket(unsigned long address, int port);

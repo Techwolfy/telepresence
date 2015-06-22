@@ -8,11 +8,15 @@ struct TelePacket {
 	char head;
 	int frameNum;
 	bool isClient;
+	bool isRobot;
+	bool ping;
 	double axes[NUM_AXES];
 	bool buttons[NUM_BUTTONS];
 
 	TelePacket(): frameNum(0),
-				  isClient(true),
+				  isClient(false),
+				  isRobot(false),
+				  ping(false),
 				  head('T') {
 		//Zero-initialize axis and button arrays
 		for(int i = 0; i < NUM_AXES; i++) {
