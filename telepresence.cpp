@@ -1,5 +1,4 @@
 //Telepresence client
-//TODO: Web module
 
 #include <stdio.h>
 #include <stdlib.h>
