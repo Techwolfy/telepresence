@@ -25,14 +25,17 @@ DummyJoystick::~DummyJoystick() {
 }
 
 //Functions
+//Retrieve the number of axes on the dummy joystick
 int DummyJoystick::getNumAxes() {
 	return DUMMY_JOY_AXES;
 }
 
+//Retrieve the number of buttons on the dummy joystick
 int DummyJoystick::getNumButtons() {
 	return DUMMY_JOY_BUTTONS;
 }
 
+//Retrieve the value of a specific axis of the dummy joystick
 double DummyJoystick::getAxis(int axis) {
 	if(axis < DUMMY_JOY_AXES) {
 		return DUMMY_JOY_AXIS_VALUE;
@@ -41,6 +44,7 @@ double DummyJoystick::getAxis(int axis) {
 	}
 }
 
+//Retrieve the state of a specific button of the dummy joystick
 bool DummyJoystick::getButton(int button) {
 	if(button < DUMMY_JOY_BUTTONS) {
 		return DUMMY_JOY_BUTTON_VALUE;

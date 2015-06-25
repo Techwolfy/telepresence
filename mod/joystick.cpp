@@ -48,6 +48,7 @@ Joystick::~Joystick() {
 	close(joyFD);
 }
 
+//Update cached joystick values if anything has changed
 void Joystick::update() {
 	if(read(joyFD, &joyEvent, sizeof(struct js_event)) == -1) {
 		return;
@@ -69,14 +70,17 @@ void Joystick::update() {
 	}
 }
 
+//Retrieve the number of axes on the connected joystick
 int Joystick::getNumAxes() {
 	return numAxes;
 }
 
+//Retrieve the number of buttons on the connected joystick
 int Joystick::getNumButtons() {
 	return numButtons;
 }
 
+//Retrieve the value of a specific axis of the connected joystick
 double Joystick::getAxis(int axis) {
 	update();
 	if(axis < numAxes) {
@@ -86,6 +90,7 @@ double Joystick::getAxis(int axis) {
 	}
 }
 
+//Retrieve the state of a specific button of the connected joystick
 bool Joystick::getButton(int button) {
 	update();
 	if(button < numButtons) {

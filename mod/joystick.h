@@ -5,6 +5,7 @@
 #include <linux/joystick.h>
 #include "input.h"
 
+//Declaration
 class Joystick : private Input {
 public:
 	//Constructor

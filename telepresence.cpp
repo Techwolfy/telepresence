@@ -1,4 +1,4 @@
-//Telepresence client
+//Telepresence client/server
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt (argc, argv, "hvdscr")) != -1) {
+	while((c = getopt(argc, argv, "hvdscr")) != -1) {
 		switch(c) {
 			case 'd':	//Daemon mode
 			case 's':	//Server mode
@@ -238,6 +238,7 @@ void robot(UDPSocket *s, TelePacket *in, TelePacket *out) {
 	}	
 }
 
+//Output a help message to the console
 void help() {
 	printf("Telepresence client v1.0.0 by Daniel Ring\n");
 	printf("Usage: telepresence [options] address:port\n");
