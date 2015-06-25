@@ -7,7 +7,7 @@ CC="g++"
 OPTIONS="-std=c++11"
 INCLUDE="-I. -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib"
 LIBS="-lrt -lRapaPololuMaestro -lwiringPi"
-FILES="telepresence.cpp udpsocket.cpp mod/*.cpp"
+FILES="*.cpp mod/*.cpp"
 
 #telepresenced
 echo "Building telepresenced..."
