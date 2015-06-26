@@ -30,7 +30,7 @@ Joystick::Joystick(const char *file) : joyFD(),
 	//Set up joystick
 		//https://www.kernel.org/doc/Documentation/input/joystick-api.txt
 		//http://archives.seul.org/linuxgames/Aug-1999/msg00107.html
-	joyFD = open(file, O_NONBLOCK);
+	joyFD = open(file, O_RDONLY | O_NONBLOCK);
 	if(joyFD < 0) {
 		printf("Joystick initialization failed!\n");
 		throw std::runtime_error("joystick initialization failed");
@@ -51,23 +51,26 @@ Joystick::~Joystick() {
 
 //Update cached joystick values if anything has changed
 void Joystick::update() {
-	if(read(joyFD, &joyEvent, sizeof(struct js_event)) == -1) {
-		return;
+	//Loop through all events in queue
+	while(read(joyFD, &joyEvent, sizeof(struct js_event)) > 0) {
+		switch(joyEvent.type & ~JS_EVENT_INIT) {	//AND NOT JS_EVENT_INIT (ignore that one)
+			case JS_EVENT_AXIS:
+				if(joyEvent.number == JOY_X_AXIS) {
+					axes[JOY_X_AXIS] = joyEvent.value;
+				} else if(joyEvent.number == JOY_Y_AXIS) {
+					axes[JOY_Y_AXIS] = joyEvent.value;
+				} else if(joyEvent.number == JOY_Z_AXIS) {
+					axes[JOY_Z_AXIS] = joyEvent.value;
+				}
+				break;
+			case JS_EVENT_BUTTON:
+				buttons[joyEvent.number] = (joyEvent.value == 1);
+				break;
+		}
 	}
 
-	switch(joyEvent.type & ~JS_EVENT_INIT) {	//AND NOT JS_EVENT_INIT (ignore that one)
-		case JS_EVENT_AXIS:
-			if(joyEvent.number == JOY_X_AXIS) {
-				axes[JOY_X_AXIS] = joyEvent.value;
-			} else if(joyEvent.number == JOY_Y_AXIS) {
-				axes[JOY_Y_AXIS] = joyEvent.value;
-			} else if(joyEvent.number == JOY_Z_AXIS) {
-				axes[JOY_Z_AXIS] = joyEvent.value;
-			}
-			break;
-		case JS_EVENT_BUTTON:
-			buttons[joyEvent.number] = joyEvent.value ? true : false;	//TODO: Test!
-			break;
+	if(errno != EAGAIN) {
+		printf("Error reading from joystick!\n");
 	}
 }
 
@@ -85,7 +88,7 @@ int Joystick::getNumButtons() {
 double Joystick::getAxis(int axis) {
 	update();
 	if(axis < numAxes) {
-		return axes[axis] / SHRT_MAX;
+		return -(double)axes[axis] / SHRT_MAX;
 	} else {
 		return 0.0;
 	}
