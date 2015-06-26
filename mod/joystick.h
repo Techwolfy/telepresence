@@ -6,7 +6,7 @@
 #include "input.h"
 
 //Declaration
-class Joystick : private Input {
+class Joystick : public Input {
 public:
 	//Constructor
 	Joystick();

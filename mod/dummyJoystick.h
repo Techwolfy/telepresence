@@ -5,7 +5,7 @@
 #include "input.h"
 
 //Declaration
-class DummyJoystick : private Input {
+class DummyJoystick : public Input {
 public:
 	//Constructor
 	DummyJoystick();

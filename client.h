@@ -3,6 +3,7 @@
 
 //Includes
 #include "base.h"
+#include "mod/input.h"
 
 //Declaration
 class Client : public Base {
@@ -18,6 +19,10 @@ public:
 	//Functions
 	void run();
 	void sendPing();
+
+private:
+	//Variables
+	Input *joystick;
 };
 
 #endif //CLIENT_H

@@ -3,6 +3,7 @@
 
 //Includes
 #include "base.h"
+#include "mod/motor.h"
 
 //Declaration
 class Robot : public Base {
@@ -18,6 +19,10 @@ public:
 	//Functions
 	void run();
 	void sendPing();
+
+private:
+	//Variables
+	Motor *motor;
 };
 
 #endif //ROBOT_H
