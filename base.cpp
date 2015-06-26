@@ -2,6 +2,7 @@
 
 //Includes
 #include <stdio.h>
+#include <stdexcept>
 #include "base.h"
 #include "telepacket.h"
 #include "udpsocket.h"
@@ -11,7 +12,7 @@ Base::Base(const char *address, const char *port) {
 	//Init socket
 	if(s.openSocket(address, port) < 0) {
 		printf("Socket initialization failed!\n");
-		//TODO: Throw exception? Exit somehow.
+		throw std::runtime_error("socket initialization failed");
 	} else {
 		printf("Socket initialized.\n");
 	}

@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <stdexcept>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
 #include "joystick.h"
@@ -31,8 +32,8 @@ Joystick::Joystick(const char *file) : joyFD(),
 		//http://archives.seul.org/linuxgames/Aug-1999/msg00107.html
 	joyFD = open(file, O_NONBLOCK);
 	if(joyFD < 0) {
-		printf("Error opening joystick!\n");
-		//TODO: Throw exception? Probably segfaults on fail right now.
+		printf("Joystick initialization failed!\n");
+		throw std::runtime_error("joystick initialization failed");
 	}
 	ioctl(joyFD, JSIOCGAXES, &numAxes);
 	ioctl(joyFD, JSIOCGBUTTONS, &numButtons);

@@ -2,6 +2,7 @@
 
 //Includes
 #include <stdio.h>
+#include <stdexcept>
 #include "raspi.h"
 #include "wiringPi.h"
 #include "softPwm.h"
@@ -10,8 +11,8 @@
 RasPi::RasPi() {
 	//Set up GPIO
 	if(wiringPiSetup() == -1) {	//Must be run as root!
-		printf("Error opening GPIO!\n");
-		//TODO: Throw exception? Probably segfaults on fail right now.
+		printf("GPIO initialization failed!\n");
+		throw std::runtime_error("GPIO initialization failed");
 	}
 
 	//Initialize sofware PWM outputs

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <exception>
 #include "base.h"
 #include "server.h"
 #include "client.h"
@@ -67,12 +68,17 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Create main program object
-	if(!isClient && !isRobot) {
-		telepresence = new Server(address, port);
-	} else if(isClient) {
-		telepresence = new Client(address, port);
-	} else {
-		telepresence = new Robot(address, port);
+	try {
+		if(!isClient && !isRobot) {
+			telepresence = new Server(address, port);
+		} else if(isClient) {
+			telepresence = new Client(address, port);
+		} else {
+			telepresence = new Robot(address, port);
+		}
+	} catch(std::exception& e) {
+		fprintf(stderr, "Fatal error creating main program object (%s), exiting!\n", e.what());
+		return EXIT_FAILURE;
 	}
 
 	//Infinite loop
@@ -83,7 +89,7 @@ int main(int argc, char *argv[]) {
 
 	delete telepresence;
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 //Output a help message to the console

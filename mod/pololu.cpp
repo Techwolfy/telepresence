@@ -2,6 +2,7 @@
 
 //Includes
 #include <stdio.h>
+#include <stdexcept>
 #include "pololu.h"
 #include "RPMSerialInterface.h"
 
@@ -17,7 +18,7 @@ Pololu::Pololu(const char *file, int baud) {
 		printf("Pololu initialized!\n");
 	} else {
 		printf("Pololu initialization failed!\n");
-		//TODO: Throw exception? Probably segfaults on fail right now.
+		throw std::runtime_error("pololu initialization failed");
 	}
 
 	//Make sure all motors are stopped
