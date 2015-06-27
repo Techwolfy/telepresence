@@ -11,7 +11,7 @@ public:
 	//Constructor
 	Client();
 
-	Client(const char *address, const char *port);
+	Client(const char *address, const char *port, int joyNum = 0);
 
 	//Destructor
 	~Client();

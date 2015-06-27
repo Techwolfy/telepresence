@@ -15,16 +15,16 @@ void help();
 int main(int argc, char *argv[]) {
 	bool isClient = false;
 	bool isRobot = false;
-	char address[16];
-	char port[6];
+	char host[255] = "0.0.0.0";
+	char port[6] = "8353";
 	Base *telepresence = NULL;
+	int clientJoystick = 0;
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvdscr")) != -1) {
+	while((c = getopt(argc, argv, "hvdcrs:p:j:")) != -1) {
 		switch(c) {
 			case 'd':	//Daemon mode
-			case 's':	//Server mode
 				isClient = false;
 				isRobot = false;
 				break;
@@ -36,45 +36,45 @@ int main(int argc, char *argv[]) {
 				isClient = false;
 				isRobot = true;
 				break;
-			case '?':
-				printf("Unknown option `%c'.\n", optopt);
-				return 1;
+			case 's':
+				strcpy(host, optarg);
+				break;
+			case 'p':	//Port number
+				strcpy(port, optarg);
+				break;
+			case 'j':	//Joystick number [Client only]
+				clientJoystick = atoi(optarg);
+				break;
+			case '?':	//Unknown or malformed option
+				if(optopt == 'p' || optopt == 'j') {
+					printf("Option `-%c' requires an argument.\n", optopt);
+				} else {
+					printf("Unknown option `-%c'.\n\n", optopt);
+				}
+				help();
+				return EXIT_SUCCESS;
 			case 'h':	//Help
 			case 'v':	//Version
-			default:
+			default:	//Should never be reached
 				help();
-				return 1;
+				return EXIT_FAILURE;
 		}
 	}
 
-	//Process host:port parameter (first non-option argument), ignore the rest
-	if(optind < argc) {
-		strcpy(address, strtok(argv[optind], ":"));
-		strcpy(port, strtok(NULL, ":"));
-		if(address == NULL || port == NULL) {
-			printf("Invalid address / port! Exiting.\n");
-			return 1;
-		}
-	} else {
-		if(!isClient && !isRobot) {
-			printf("Missing address / port! Using defaults (0.0.0.0:8353).\n");
-			sprintf(address, "0.0.0.0");
-			sprintf(port, "8353");
-		} else {
-			printf("Missing address / port! Using defaults (127.0.0.1:8353).\n");
-			sprintf(address, "127.0.0.1");
-			sprintf(port, "8353");
-		}
+	//Ensure host parameter (first non-option argument) was provided if necessary
+	if((isClient || isRobot) && strcmp(host, "0.0.0.0") == 0) {
+		fprintf(stderr, "Missing hostname! Exiting.\n");
+		return EXIT_FAILURE;
 	}
 
 	//Create main program object
 	try {
 		if(!isClient && !isRobot) {
-			telepresence = new Server(address, port);
+			telepresence = new Server(host, port);	//Server doesn't need to explicitly connect to anything
 		} else if(isClient) {
-			telepresence = new Client(address, port);
+			telepresence = new Client(host, port, clientJoystick);
 		} else {
-			telepresence = new Robot(address, port);
+			telepresence = new Robot(host, port);
 		}
 	} catch(std::exception& e) {
 		fprintf(stderr, "Fatal error creating main program object (%s), exiting!\n", e.what());
@@ -95,11 +95,13 @@ int main(int argc, char *argv[]) {
 //Output a help message to the console
 void help() {
 	printf("Telepresence client v1.0.0 by Daniel Ring\n");
-	printf("Usage: telepresence [options] address:port\n");
+	printf("Usage:\ttelepresence [mode] [options]\n");
 	printf("-h\tPrints this help message.\n");
 	printf("-v\tPrints this version message.\n");
 	printf("-d\tRun in server mode (relaying data).\n");
-	printf("-s\tRun in server mode (same as -d).\n");
 	printf("-c\tRun in client mode (controlling a robot).\n");
 	printf("-r\tRun in robot mode (controlled by a client).\n");
+	printf("-s [host]\tRemote server address (required for client and robot modes).\n");
+	printf("-p [port]\tUse alternate port (default: 8353).\n");
+	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 }

@@ -11,7 +11,7 @@ public:
 	//Constructor
 	Joystick();
 
-	Joystick(const char *file);
+	Joystick(int joyNum);
 
 	//Destructor
 	~Joystick();

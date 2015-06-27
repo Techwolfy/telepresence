@@ -13,7 +13,7 @@ public:
 	Base(const char *address, const char *port);
 
 	//Destructor
-	~Base();
+	virtual ~Base();
 
 	//Functions
 	virtual void run() = 0;
@@ -26,7 +26,7 @@ protected:
 	TelePacket ping;
 
 	//Functions
-	void printData(TelePacket &data);
+	virtual void printData(TelePacket &data);
 };
 
 #endif //BASE_H

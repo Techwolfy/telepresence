@@ -17,20 +17,28 @@ const int Joystick::JOY_Y_AXIS = 1;
 const int Joystick::JOY_Z_AXIS = 2;
 
 //Constructor
-Joystick::Joystick() : Joystick("/dev/input/js0") {
+Joystick::Joystick() : Joystick(0) {
 
 }
 
-Joystick::Joystick(const char *file) : joyFD(),
+Joystick::Joystick(int joyNum) : joyFD(),
 								 //joyEvent(default),
 								 numAxes(0),
 								 numButtons(0),
 								 axes(NULL),
 								 buttons(NULL) {
+	char joyFile[15] = "/dev/input/js0";
+	if(joyNum >= 0 && joyNum < 10) {
+		sprintf(joyFile, "/dev/input/js%d", joyNum);
+	} else {
+		printf("Error identifying joystick!\n");
+		throw std::runtime_error("couldn't identify joystick");
+	}
+
 	//Set up joystick
 		//https://www.kernel.org/doc/Documentation/input/joystick-api.txt
 		//http://archives.seul.org/linuxgames/Aug-1999/msg00107.html
-	joyFD = open(file, O_RDONLY | O_NONBLOCK);
+	joyFD = open(joyFile, O_RDONLY | O_NONBLOCK);
 	if(joyFD < 0) {
 		printf("Joystick initialization failed!\n");
 		throw std::runtime_error("joystick initialization failed");

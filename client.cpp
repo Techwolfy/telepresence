@@ -16,10 +16,10 @@ Client::Client() : Client("127.0.0.1", "8353") {
 
 }
 
-Client::Client(const char *address, const char *port) : Base(address, port) {
+Client::Client(const char *address, const char *port, int joyNum /* = 0 */) : Base(address, port) {
 	//Set up joystick
 #ifdef JOYSTICK
-	joystick = new Joystick();
+	joystick = new Joystick(joyNum);
 #else
 	joystick = new DummyJoystick();
 #endif

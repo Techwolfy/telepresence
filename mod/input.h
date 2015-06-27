@@ -7,7 +7,7 @@ public:
 	Input() = default;
 
 	//Destructor
-	~Input() = default;
+	virtual ~Input() {};	//FIXME: Cannot be explicitly defaulted in g++ <= 4.7; see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53613
 
 	//Functions
 	virtual int getNumButtons() = 0;

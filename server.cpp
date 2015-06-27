@@ -66,7 +66,7 @@ void Server::run() {
 	s.writeData(&robotAddress, (void *)&in, sizeof(in));
 }
 
-//Attempt to ping both the client and the robot
+//Attempt to ping a remote client
 void Server::sendPing(struct sockaddr_in &remoteAddress) {
 	if(remoteAddress.sin_addr.s_addr != 0) {
 		s.writeData(&remoteAddress, (void *)&ping, sizeof(ping));
