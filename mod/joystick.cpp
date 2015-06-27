@@ -3,6 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
@@ -26,7 +27,8 @@ Joystick::Joystick(int joyNum) : joyFD(),
 								 numAxes(0),
 								 numButtons(0),
 								 axes(NULL),
-								 buttons(NULL) {
+								 buttons(NULL),
+								 name{0} {
 	char joyFile[15] = "/dev/input/js0";
 	if(joyNum >= 0 && joyNum < 10) {
 		sprintf(joyFile, "/dev/input/js%d", joyNum);
@@ -45,9 +47,14 @@ Joystick::Joystick(int joyNum) : joyFD(),
 	}
 	ioctl(joyFD, JSIOCGAXES, &numAxes);
 	ioctl(joyFD, JSIOCGBUTTONS, &numButtons);
+	if(ioctl(joyFD, JSIOCGNAME(sizeof(name)), name) < 0) {
+		strncpy(name, "Unknown Joystick", sizeof(name));
+	}
 	//Allocate and zero-initialize arrays for joystick data
 	axes = (int *)calloc(numAxes, sizeof(int));
 	buttons = (bool *)calloc(numButtons, sizeof(bool));
+
+	printf("Initialized joystick: %s\n", name);
 }
 
 //Destructor

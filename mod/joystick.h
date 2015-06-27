@@ -35,6 +35,7 @@ private:
 	int numButtons;
 	int *axes;
 	bool *buttons;
+	char name[128];
 
 	//Functions
 	void update();
