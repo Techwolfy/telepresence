@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <exception>
+#include <stdexcept>
 #include "base.h"
 #include "server.h"
 #include "client.h"
@@ -18,13 +19,15 @@ int main(int argc, char *argv[]) {
 	char host[255] = "0.0.0.0";
 	char port[6] = "8353";
 	Base *telepresence = NULL;
-	int clientJoystick = 0;
+	bool dummy = false;
+	int clientJoystick = -1;
+	char file[255] = {0};
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvdcrs:p:j:")) != -1) {
+	while((c = getopt(argc, argv, "hvscra:p:dj:f:")) != -1) {
 		switch(c) {
-			case 'd':	//Daemon mode
+			case 's':	//Server mode
 				isClient = false;
 				isRobot = false;
 				break;
@@ -36,17 +39,23 @@ int main(int argc, char *argv[]) {
 				isClient = false;
 				isRobot = true;
 				break;
-			case 's':
+			case 'a':	//Remote host
 				strcpy(host, optarg);
 				break;
-			case 'p':	//Port number
+			case 'p':	//Remote port
 				strcpy(port, optarg);
+				break;
+			case 'd':	//Dummy I/O
+				dummy = true;
 				break;
 			case 'j':	//Joystick number [Client only]
 				clientJoystick = atoi(optarg);
 				break;
+			case 'f':	//File path [Client only]
+				strcpy(file, optarg);
+				break;
 			case '?':	//Unknown or malformed option
-				if(optopt == 'p' || optopt == 'j') {
+				if(optopt == 'p' || optopt == 'j' || optopt == 'f') {
 					printf("Option `-%c' requires an argument.\n", optopt);
 				} else {
 					printf("Unknown option `-%c'.\n\n", optopt);
@@ -72,7 +81,16 @@ int main(int argc, char *argv[]) {
 		if(!isClient && !isRobot) {
 			telepresence = new Server(host, port);	//Server doesn't need to explicitly connect to anything
 		} else if(isClient) {
-			telepresence = new Client(host, port, clientJoystick);
+			if(dummy) {
+				telepresence = new Client(host, port, dummy);
+			} else if(clientJoystick >= 0) {
+				telepresence = new Client(host, port, clientJoystick);
+			} else if(file[0] != 0) {
+				telepresence = new Client(host, port, file);
+			} else {
+				printf("Client input type not specified!\n");
+				throw std::runtime_error("missing client input type");
+			}
 		} else {
 			telepresence = new Robot(host, port);
 		}
@@ -98,10 +116,12 @@ void help() {
 	printf("Usage:\ttelepresence [mode] [options]\n");
 	printf("-h\tPrints this help message.\n");
 	printf("-v\tPrints this version message.\n");
-	printf("-d\tRun in server mode (relaying data).\n");
+	printf("-s\tRun in server mode (relaying data).\n");
 	printf("-c\tRun in client mode (controlling a robot).\n");
 	printf("-r\tRun in robot mode (controlled by a client).\n");
-	printf("-s [host]\tRemote server address (required for client and robot modes).\n");
+	printf("-a [address]\tRemote server address (required for client and robot modes).\n");
 	printf("-p [port]\tUse alternate port (default: 8353).\n");
+	printf("-d\tUse dummy inputs (client only).\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
+	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
 }

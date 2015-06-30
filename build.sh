@@ -1,6 +1,5 @@
 #!/bin/sh
 #Build script for telepresence
-#Defaults to dummy joystick; use -DJOYSTICK for a standard joystick.
 #Defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi.
 
 CC="g++"
@@ -15,7 +14,9 @@ ${CC} ${OPTIONS} -o telepresenced ${FILES} ${INCLUDE} ${LIBS}
 
 #telepresence-client
 echo "Building telepresence-client..."
-${CC} ${OPTIONS} -DJOYSTICK -o telepresence-client ${FILES} ${INCLUDE} ${LIBS}
+#Currently identical to 'telepresenced' binary, will be separated again later
+#${CC} ${OPTIONS} -o telepresence-client ${FILES} ${INCLUDE} ${LIBS}
+cp telepresenced telepresence-client
 
 #telepresence-pololu
 echo "Building telepresence-pololu..."

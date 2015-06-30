@@ -10,8 +10,10 @@ class Client : public Base {
 public:
 	//Constructor
 	Client();
-
-	Client(const char *address, const char *port, int joyNum = 0);
+	
+	Client(const char *address, const char *port, bool dummy = false);
+	Client(const char *address, const char *port, int joyNum);
+	Client(const char *address, const char *port, char *file);
 
 	//Destructor
 	~Client();
@@ -22,7 +24,7 @@ public:
 
 private:
 	//Variables
-	Input *joystick;
+	Input *input;
 };
 
 #endif //CLIENT_H

@@ -5,24 +5,20 @@
 #include "client.h"
 #include "udpsocket.h"
 #include "mod/input.h"
-#ifdef JOYSTICK
-	#include "mod/joystick.h"
-#else
-	#include "mod/dummyJoystick.h"
-#endif
+#include "mod/dummyJoystick.h"
+#include "mod/joystick.h"
+#include "mod/controlFile.h"
 
 //Constructor
 Client::Client() : Client("127.0.0.1", "8353") {
 
 }
 
-Client::Client(const char *address, const char *port, int joyNum /* = 0 */) : Base(address, port) {
-	//Set up joystick
-#ifdef JOYSTICK
-	joystick = new Joystick(joyNum);
-#else
-	joystick = new DummyJoystick();
-#endif
+Client::Client(const char *address, const char *port, bool dummy /* = false */) : Base(address, port) {
+	//Set up dummy joystick if necessary
+	if(dummy) {
+		input = new DummyJoystick();
+	}
 
 	//Don't block on read, data still needs to be sent to the robot
 	s.blockRead(false);
@@ -43,9 +39,19 @@ Client::Client(const char *address, const char *port, int joyNum /* = 0 */) : Ba
 	sendPing();
 }
 
+Client::Client(const char *address, const char *port, int joyNum) : Client(address, port) {
+	//Set up joystick
+	input = new Joystick(joyNum);
+}
+
+Client::Client(const char *address, const char *port, char *file) : Client(address, port) {
+	//Set up web client pipe
+	input = new ControlFile(file);
+}
+
 //Destructor
 Client::~Client() {
-	delete joystick;
+	delete input;
 }
 
 //Functions
@@ -61,11 +67,11 @@ void Client::run() {
 
 	//Prepare joystick data for robot
 	out.frameNum++;
-	for(int i = 0; i < joystick->getNumAxes() && i < TelePacket::NUM_AXES; i++) {
-		out.axes[i] = joystick->getAxis(i);
+	for(int i = 0; i < input->getNumAxes() && i < TelePacket::NUM_AXES; i++) {
+		out.axes[i] = input->getAxis(i);
 	}
-	for(int i = 0; i < joystick->getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
-		out.buttons[i] = joystick->getButton(i);
+	for(int i = 0; i < input->getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
+		out.buttons[i] = input->getButton(i);
 	}
 
 	//Send data to robot
