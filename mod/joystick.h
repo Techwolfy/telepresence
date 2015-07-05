@@ -17,6 +17,7 @@ public:
 	~Joystick();
 
 	//Functions
+	void update();
 	int getNumButtons();
 	int getNumAxes();
 	double getAxis(int axis);
@@ -36,9 +37,6 @@ private:
 	int *axes;
 	bool *buttons;
 	char name[128];
-
-	//Functions
-	void update();
 };
 
 #endif //JOYSTICK_H

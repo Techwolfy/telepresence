@@ -66,6 +66,7 @@ void Client::run() {
 	}
 
 	//Prepare joystick data for robot
+	input->update();
 	out.frameNum++;
 	for(int i = 0; i < input->getNumAxes() && i < TelePacket::NUM_AXES; i++) {
 		out.axes[i] = input->getAxis(i);
@@ -75,6 +76,7 @@ void Client::run() {
 	}
 
 	//Send data to robot
+	printData(out);
 	s.writeData((void *)&out, sizeof(out));
 }
 

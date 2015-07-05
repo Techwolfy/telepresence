@@ -101,7 +101,6 @@ int Joystick::getNumButtons() {
 
 //Retrieve the value of a specific axis of the connected joystick
 double Joystick::getAxis(int axis) {
-	update();
 	if(axis < numAxes) {
 		return -(double)axes[axis] / SHRT_MAX;
 	} else {
@@ -111,7 +110,6 @@ double Joystick::getAxis(int axis) {
 
 //Retrieve the state of a specific button of the connected joystick
 bool Joystick::getButton(int button) {
-	update();
 	if(button < numButtons) {
 		return buttons[button];
 	} else {

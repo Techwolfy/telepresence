@@ -16,6 +16,7 @@ public:
 	~ControlFile();
 
 	//Functions
+	void update();
 	int getNumButtons();
 	int getNumAxes();
 	double getAxis(int axis);
@@ -29,9 +30,6 @@ private:
 	int numButtons;
 	double *axes;
 	bool *buttons;
-
-	//Functions
-	void update();
 };
 
 #endif //CONTROLFILE_H

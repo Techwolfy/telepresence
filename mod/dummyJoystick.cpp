@@ -25,6 +25,11 @@ DummyJoystick::~DummyJoystick() {
 }
 
 //Functions
+//"Update" the static dummy joystick values
+void DummyJoystick::update() {
+	printf("Dummy joystick updated!\n");
+}
+
 //Retrieve the number of axes on the dummy joystick
 int DummyJoystick::getNumAxes() {
 	return DUMMY_JOY_AXES;

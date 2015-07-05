@@ -14,6 +14,7 @@ public:
 	~DummyJoystick();
 
 	//Functions
+	void update();
 	int getNumButtons();
 	int getNumAxes();
 	double getAxis(int axis);

@@ -79,7 +79,6 @@ int ControlFile::getNumButtons() {
 
 //Retrieve the value of a specific axis from the web client
 double ControlFile::getAxis(int axis) {
-	update();
 	if(axis < numAxes) {
 		return axes[axis];
 	} else {
@@ -89,7 +88,6 @@ double ControlFile::getAxis(int axis) {
 
 //Retrieve the state of a specific button from the web client
 bool ControlFile::getButton(int button) {
-	update();
 	if(button < numButtons) {
 		return buttons[button];
 	} else {
