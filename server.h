@@ -10,7 +10,6 @@ class Server : public Base {
 public:
 	//Constructor
 	Server();
-
 	Server(const char *address, const char *port);
 
 	//Destructor

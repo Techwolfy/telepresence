@@ -10,7 +10,6 @@ class Joystick : public Input {
 public:
 	//Constructor
 	Joystick();
-
 	Joystick(int joyNum);
 
 	//Destructor

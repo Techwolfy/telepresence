@@ -9,7 +9,6 @@ class Base {
 public:
 	//Constructor
 	Base() = delete;
-
 	Base(const char *address, const char *port);
 
 	//Destructor

@@ -10,7 +10,6 @@ class Client : public Base {
 public:
 	//Constructor
 	Client();
-	
 	Client(const char *address, const char *port, bool dummy = false);
 	Client(const char *address, const char *port, int joyNum);
 	Client(const char *address, const char *port, char *file);

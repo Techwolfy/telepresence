@@ -10,7 +10,6 @@ class Robot : public Base {
 public:
 	//Constructor
 	Robot();
-
 	Robot(const char *address, const char *port);
 
 	//Destructor

@@ -10,7 +10,6 @@ class Pololu : public Motor {
 public:
 	//Constructor
 	Pololu();
-
 	Pololu(const char *file, int baud);
 
 	//Destructor

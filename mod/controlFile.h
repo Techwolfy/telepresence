@@ -9,7 +9,6 @@ class ControlFile : public Input {
 public:
 	//Constructor
 	ControlFile();
-
 	ControlFile(const char *filename);
 
 	//Destructor
