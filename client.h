@@ -2,11 +2,12 @@
 #define CLIENT_H
 
 //Includes
-#include "base.h"
+#include <netinet/in.h>
+#include "server.h"
 #include "mod/input.h"
 
 //Declaration
-class Client : public Base {
+class Client : public Server {
 public:
 	//Constructor
 	Client();
@@ -19,11 +20,15 @@ public:
 
 	//Functions
 	void run();
-	void sendPing();
 
 private:
 	//Variables
+	bool autodetect;
 	Input *input;
+
+	//Functions
+	using Server::sendPing;
+	void sendPing();
 };
 
 #endif //CLIENT_H

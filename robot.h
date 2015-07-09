@@ -2,11 +2,11 @@
 #define ROBOT_H
 
 //Includes
-#include "base.h"
+#include "server.h"
 #include "mod/motor.h"
 
 //Declaration
-class Robot : public Base {
+class Robot : public Server {
 public:
 	//Constructor
 	Robot();
@@ -17,11 +17,13 @@ public:
 
 	//Functions
 	void run();
-	void sendPing();
 
 private:
 	//Variables
 	Motor *motor;
+
+	//Functions
+	void sendPing();
 };
 
 #endif //ROBOT_H

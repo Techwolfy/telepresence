@@ -2,6 +2,8 @@
 
 //Includes
 #include <stdio.h>
+#include <string.h>
+#include <netinet/in.h>
 #include "client.h"
 #include "udpsocket.h"
 #include "mod/input.h"
@@ -14,10 +16,15 @@ Client::Client() : Client("127.0.0.1", "8353") {
 
 }
 
-Client::Client(const char *address, const char *port, bool dummy /* = false */) : Base(address, port) {
+Client::Client(const char *address, const char *port, bool dummy /* = false */) : Server(address, port),
+																				  autodetect(false) {
 	//Set up dummy joystick if necessary
 	if(dummy) {
 		input = new DummyJoystick();
+	}
+
+	if(strcmp(address, "0.0.0.0") == 0) {
+		autodetect = true;
 	}
 
 	//Don't block on read, data still needs to be sent to the robot
@@ -59,8 +66,10 @@ Client::~Client() {
 void Client::run() {
 	//Respond to pings
 	in.head = '\0';
-	if(s.readData((void *)&in, sizeof(in)) > 0 && in.head == 'T') {
-		if(in.ping) {
+	if(s.readData((void *)&in, sizeof(in), &unknownAddress) > 0 && in.head == 'T') {
+		if(in.ping && autodetect) {
+			handlePing();
+		} else if(in.ping) {
 			printf("Ping %d recieved!\n", in.frameNum);
 		}
 	}
@@ -77,11 +86,19 @@ void Client::run() {
 
 	//Send data to robot
 	printData(out);
-	s.writeData((void *)&out, sizeof(out));
+	if(autodetect) {
+		s.writeData(&robotAddress, (void *)&out, sizeof(out));
+	} else {
+		s.writeData((void *)&out, sizeof(out));
+	}
 }
 
 //Ping the server
 void Client::sendPing() {
-	s.writeData((void *)&ping, sizeof(ping));
+	if(autodetect) {
+		sendPing(robotAddress);
+	} else {
+		s.writeData((void *)&ping, sizeof(ping));
+	}
 	ping.frameNum++;
 }

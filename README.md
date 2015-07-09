@@ -21,7 +21,9 @@ To build telepresenced and the various client and robot binaries, simply run [`b
 Using Telepresence
 ------------------
 
-While exact usage instructions depend on the individual modules and hardware, the basics remain the same. If using the client/server/robot model, ensure the daemon is running and accessible over the network, then start the client and robot with its network address to begin communication. If using the client/robot model, simply run each with the network address of the other. Once the system is running, the robot should be remotely controllable from the client.
+While exact usage instructions depend on the individual modules and hardware, the basics remain the same. If using the client/server/robot model, ensure the daemon is running and accessible over the network, then start the client and robot with its network address to begin communication. If using the client/robot model, either run each with the network address of the other or set the client to autodetect and point the robot to it. Once the system is running, the robot should be remotely controllable from the client.
+
+The server is only intended to echo packets from the client to the robot when both are behind restrictive firewalls, or when neither will have a static IP address or hostname. If using the web client, the client should be run from an accessible network location in server mode (set to autodetect) instead.
 
 
 License

@@ -6,7 +6,6 @@
 #include <string.h>
 #include <exception>
 #include <stdexcept>
-#include "base.h"
 #include "server.h"
 #include "client.h"
 #include "robot.h"
@@ -18,7 +17,7 @@ int main(int argc, char *argv[]) {
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
 	char port[6] = "8353";
-	Base *telepresence = NULL;
+	Server *telepresence = NULL;
 	bool dummy = false;
 	int clientJoystick = -1;
 	char file[255] = {0};
@@ -71,7 +70,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Ensure host parameter (first non-option argument) was provided if necessary
-	if((isClient || isRobot) && strcmp(host, "0.0.0.0") == 0) {
+	if(isRobot && strcmp(host, "0.0.0.0") == 0) {
 		fprintf(stderr, "Missing hostname! Exiting.\n");
 		return EXIT_FAILURE;
 	}
@@ -119,7 +118,7 @@ void help() {
 	printf("-s\tRun in server mode (relaying data).\n");
 	printf("-c\tRun in client mode (controlling a robot).\n");
 	printf("-r\tRun in robot mode (controlled by a client).\n");
-	printf("-a [address]\tRemote server address (required for client and robot modes).\n");
+	printf("-a [address]\tRemote server address (required for robot mode; default: autodetect).\n");
 	printf("-p [port]\tUse alternate port (default: 8353).\n");
 	printf("-d\tUse dummy inputs (client only).\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");

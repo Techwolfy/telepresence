@@ -18,7 +18,7 @@ Robot::Robot() : Robot("127.0.0.1", "8353") {
 
 }
 
-Robot::Robot(const char *address, const char *port) : Base(address, port) {
+Robot::Robot(const char *address, const char *port) : Server(address, port) {
 	//Set up motor
 #ifdef POLOLU
 	motor = new Pololu();

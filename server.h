@@ -3,27 +3,36 @@
 
 //Includes
 #include <netinet/in.h>
-#include "base.h"
+#include "telepacket.h"
+#include "udpsocket.h"
 
 //Declaration
-class Server : public Base {
+class Server {
 public:
 	//Constructor
 	Server();
 	Server(const char *address, const char *port);
 
 	//Destructor
-	~Server();
+	virtual ~Server();
 
 	//Functions
-	void run();
-	void sendPing(struct sockaddr_in &remoteAddress);
+	virtual void run();
 
-private:
+protected:
 	//Variables
+	UDPSocket s;
+	TelePacket in;
+	TelePacket out;
+	TelePacket ping;
 	struct sockaddr_in robotAddress;
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in unknownAddress;
+
+	//Functions
+	virtual void handlePing();
+	virtual void sendPing(struct sockaddr_in &remoteAddress);
+	static void printData(TelePacket &data);
 };
 
 #endif //SERVER_H
