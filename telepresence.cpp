@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <exception>
 #include <stdexcept>
 #include "server.h"
@@ -11,8 +12,13 @@
 #include "robot.h"
 
 void help();
+void signalHandler(int signal);
+
+//Global variable for main loop control
+bool running;
 
 int main(int argc, char *argv[]) {
+	running = false;
 	bool isClient = false;
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
@@ -75,6 +81,14 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	//Set up SIGINT handler
+	if(signal(SIGINT, signalHandler) != SIG_ERR) {
+		printf("SIGINT handler intialized!\n");
+	} else {
+		printf("SIGINT handler intialization failed!\n");
+		return EXIT_FAILURE;
+	}
+
 	//Create main program object
 	try {
 		if(!isClient && !isRobot) {
@@ -99,7 +113,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Infinite loop
-	while(true) {
+	running = true;
+	while(running) {
 		telepresence->run();
 		usleep(5000); //0.005 seconds
 	}
@@ -123,4 +138,11 @@ void help() {
 	printf("-d\tUse dummy inputs (client only).\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
+}
+
+void signalHandler(int signal) {
+	if(signal == SIGINT) {
+		printf("SIGINT received!\n");
+		running = false;
+	}
 }

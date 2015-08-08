@@ -60,22 +60,3 @@ double Pololu::scalePower(double power) {
 
 	return power;
 }
-
-/*
-#include <signal.h>
-
-	//Set up SIGINT handler
-	if(signal(SIGINT, signalHandler) != SIG_ERR) {
-		cout << "SIGINT handler intialized!" << endl;
-	} else {
-		cout << "SIGINT handler intialization failed!" << endl;
-		return -1;
-	}
-
-	void signalHandler(int signal) {
-	if(signal == SIGINT) {
-		cout << "SIGINT received!" << endl;
-		running = false;
-	}
-}
-*/
