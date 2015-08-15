@@ -64,6 +64,7 @@ Joystick::~Joystick() {
 	close(joyFD);
 }
 
+//Functions
 //Update cached joystick values if anything has changed
 void Joystick::update() {
 	//Loop through all events in queue

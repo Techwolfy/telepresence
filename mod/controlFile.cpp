@@ -42,6 +42,7 @@ ControlFile::~ControlFile() {
 	free(buttons);
 }
 
+//Functions
 //Update cached values if anything has changed
 void ControlFile::update() {
 	if(fgets(buffer, sizeof(buffer), file) == NULL) {

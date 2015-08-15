@@ -12,6 +12,7 @@
 #else
 	#include "mod/dummyMotor.h"
 #endif
+#include "mod/watchdog.h"
 
 //Constructor
 Robot::Robot() : Robot("127.0.0.1", "8353") {
@@ -52,17 +53,27 @@ Robot::~Robot() {
 //Functions
 //Main robot loop
 void Robot::run() {
+	//Check the watchdog timer
+	if(!watchdog.isAlive()) {
+		motor->stop();
+	}
+
 	//Get control data from server
 	in.head = '\0';
 	if(s.readData((void *)&in, sizeof(in)) < 0 || in.head != 'T') {
 		return;
+	} else {
+		watchdog.feed();
 	}
+
+	//Handle pings
 	if(in.ping) {
 		printf("Ping %d recieved!\n", in.frameNum);
 		return;
 	}
 
-	if(in.isClient) {	//Data recieved from client
+	//Data recieved from client
+	if(in.isClient && watchdog.isAlive()) {
 		printData(in);
 		motor->control(TelePacket::NUM_AXES, in.axes);
 	}

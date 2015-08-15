@@ -4,6 +4,7 @@
 //Includes
 #include "server.h"
 #include "mod/motor.h"
+#include "mod/watchdog.h"
 
 //Declaration
 class Robot : public Server {
@@ -21,6 +22,7 @@ public:
 private:
 	//Variables
 	Motor *motor;
+	Watchdog watchdog;
 
 	//Functions
 	void sendPing();
