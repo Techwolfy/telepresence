@@ -2,7 +2,7 @@
 
 //Includes
 #include <stdio.h>
-#include "dummyMotor.h"
+#include "output/dummyMotor.h"
 
 //Constructor
 DummyMotor::DummyMotor() {
@@ -18,7 +18,7 @@ DummyMotor::~DummyMotor() {
 //Dummy motor; output target values to console
 void DummyMotor::control(int numValues, double values[]) {
 	printf("Dummy motor control() called.\n");
-	for(int i = 0; i < numValues && i < 6; i++) {
+	for(int i = 0; i < numValues; i++) {
 		printf("Output %d: %f\n", i, values[i]);
 	}
 }

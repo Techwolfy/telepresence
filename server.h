@@ -4,7 +4,7 @@
 //Includes
 #include <netinet/in.h>
 #include "telepacket.h"
-#include "udpsocket.h"
+#include "util/udpsocket.h"
 
 //Declaration
 class Server {

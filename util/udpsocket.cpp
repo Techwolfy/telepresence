@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include "udpsocket.h"
+#include "util/udpsocket.h"
 
 //Variables
 const char *UDPSocket::SOCKET_DEFAULT_SERVER_ADDRESS = "0.0.0.0";

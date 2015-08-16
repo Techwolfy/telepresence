@@ -2,32 +2,31 @@
 
 //Includes
 #include <stdio.h>
+#include <dlfcn.h>
+#include <stdexcept>
 #include "robot.h"
-#include "udpsocket.h"
-#include "mod/motor.h"
-#ifdef POLOLU
-	#include "mod/pololu.h"
-#elif RASPI
-	#include "mod/raspi.h"
-#else
-	#include "mod/dummyMotor.h"
-#endif
-#include "mod/watchdog.h"
+#include "util/udpsocket.h"
+#include "util/watchdog.h"
+#include "output/output.h"
+#include "robot/dummyRobot.h"
 
 //Constructor
-Robot::Robot() : Robot("127.0.0.1", "8353") {
+Robot::Robot() : Robot("127.0.0.1", "8353", NULL) {
 
 }
 
-Robot::Robot(const char *address, const char *port) : Server(address, port) {
-	//Set up motor
-#ifdef POLOLU
-	motor = new Pololu();
-#elif RASPI
-	motor = new RasPi();
-#else
-	motor = new DummyMotor();
-#endif
+Robot::Robot(const char *address, const char *port, const char *libFile) : Server(address, port),
+													  					   watchdog(500),
+													  					   outputLibrary(NULL),
+													  					   output(NULL) {
+	//Set up output object
+	if(libFile != NULL) {
+		loadOutputLibrary(libFile);
+	} else {
+		createOutput = &createRobot;
+		destroyOutput = &destroyRobot;
+	}
+	output = createOutput();
 
 	//Set up output packet
 	out.frameNum = 0;
@@ -47,15 +46,47 @@ Robot::Robot(const char *address, const char *port) : Server(address, port) {
 
 //Destructor
 Robot::~Robot() {
-	delete motor;
+	destroyOutput(output);
+	if(outputLibrary == NULL) {
+		dlclose(outputLibrary);
+	}
 }
 
 //Functions
+//Load library for outputs at runtime
+void Robot::loadOutputLibrary(const char *filename) {
+	//Load library
+	outputLibrary = dlopen(filename, RTLD_LAZY);
+	if(!outputLibrary) {
+		printf("Failed to load output library: %s\n", dlerror());
+		throw std::runtime_error("failed to load output library");
+	} else {
+		printf("Loaded output library: %s\n", filename);
+	}
+
+	//Set up output constructor
+	const char* symbolError = NULL;
+	*(void**)(&createOutput) = dlsym(outputLibrary, "createRobot");
+	symbolError = dlerror();
+	if(symbolError) {
+		printf("Failed to load output constructor: %s\n", dlerror());
+		throw std::runtime_error("failed to load output constructor");
+	}
+
+	//Set up output destructor
+	*(void**)(&destroyOutput) = dlsym(outputLibrary, "destroyRobot");
+	symbolError = dlerror();
+	if(symbolError) {
+		printf("Failed to load output destructor: %s\n", dlerror());
+		throw std::runtime_error("failed to load output destructor");
+	}
+}
+
 //Main robot loop
 void Robot::run() {
 	//Check the watchdog timer
 	if(!watchdog.isAlive()) {
-		motor->stop();
+		output->stop();
 	}
 
 	//Get control data from server
@@ -75,7 +106,7 @@ void Robot::run() {
 	//Data recieved from client
 	if(in.isClient && watchdog.isAlive()) {
 		printData(in);
-		motor->control(TelePacket::NUM_AXES, in.axes);
+		output->control(TelePacket::NUM_AXES, in.axes, TelePacket::NUM_BUTTONS, in.buttons);
 	}
 }
 

@@ -2,7 +2,7 @@
 #define DUMMYMOTOR_H
 
 //Includes
-#include "motor.h"
+#include "output/motor.h"
 
 //Declaration
 class DummyMotor : public Motor {

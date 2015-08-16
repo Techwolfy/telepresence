@@ -4,7 +4,7 @@
 //Includes
 #include <netinet/in.h>
 #include "server.h"
-#include "mod/input.h"
+#include "input/input.h"
 
 //Declaration
 class Client : public Server {

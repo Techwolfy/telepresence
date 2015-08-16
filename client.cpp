@@ -5,11 +5,11 @@
 #include <string.h>
 #include <netinet/in.h>
 #include "client.h"
-#include "udpsocket.h"
-#include "mod/input.h"
-#include "mod/dummyJoystick.h"
-#include "mod/joystick.h"
-#include "mod/controlFile.h"
+#include "util/udpsocket.h"
+#include "input/input.h"
+#include "input/dummyJoystick.h"
+#include "input/joystick.h"
+#include "input/controlFile.h"
 
 //Constructor
 Client::Client() : Client("127.0.0.1", "8353") {
@@ -26,9 +26,6 @@ Client::Client(const char *address, const char *port, bool dummy /* = false */) 
 	if(strcmp(address, "0.0.0.0") == 0) {
 		autodetect = true;
 	}
-
-	//Don't block on read, data still needs to be sent to the robot
-	s.blockRead(false);
 
 	//Set up output packet
 	out.frameNum = 0;

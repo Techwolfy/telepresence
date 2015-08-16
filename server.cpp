@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include "server.h"
 #include "telepacket.h"
-#include "udpsocket.h"
+#include "util/udpsocket.h"
 
 //Constructor
 Server::Server() : Server("0.0.0.0", "8353") {
@@ -23,6 +23,9 @@ Server::Server(const char *address, const char *port) : unknownAddress{0},
 	} else {
 		printf("Socket initialized.\n");
 	}
+
+	//Don't block on read so the main loop can check for SIGINT
+	s.blockRead(false);
 
 	//Set up output packet
 	out.frameNum = 0;

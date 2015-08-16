@@ -1,5 +1,6 @@
 //Telepresence client/server
 
+//Includes
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,12 +12,14 @@
 #include "client.h"
 #include "robot.h"
 
+//Function declarations
 void help();
 void signalHandler(int signal);
 
 //Global variable for main loop control
 bool running;
 
+//Functions
 int main(int argc, char *argv[]) {
 	running = false;
 	bool isClient = false;
@@ -27,10 +30,11 @@ int main(int argc, char *argv[]) {
 	bool dummy = false;
 	int clientJoystick = -1;
 	char file[255] = {0};
+	char libFile[255] = {0};
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvscra:p:dj:f:")) != -1) {
+	while((c = getopt(argc, argv, "hvscra:p:dj:f:o:")) != -1) {
 		switch(c) {
 			case 's':	//Server mode
 				isClient = false;
@@ -59,8 +63,11 @@ int main(int argc, char *argv[]) {
 			case 'f':	//File path [Client only]
 				strcpy(file, optarg);
 				break;
+			case 'o':
+				strcpy(libFile, optarg);
+				break;
 			case '?':	//Unknown or malformed option
-				if(optopt == 'p' || optopt == 'j' || optopt == 'f') {
+				if(optopt == 'p' || optopt == 'j' || optopt == 'f' || optopt == 'o') {
 					printf("Option `-%c' requires an argument.\n", optopt);
 				} else {
 					printf("Unknown option `-%c'.\n\n", optopt);
@@ -105,9 +112,13 @@ int main(int argc, char *argv[]) {
 				throw std::runtime_error("missing client input type");
 			}
 		} else {
-			telepresence = new Robot(host, port);
+			if(libFile[0] != 0) {
+				telepresence = new Robot(host, port, libFile);
+			} else {
+				telepresence = new Robot(host, port, NULL);
+			}
 		}
-	} catch(std::exception& e) {
+	} catch(std::exception &e) {
 		fprintf(stderr, "Fatal error creating main program object (%s), exiting!\n", e.what());
 		return EXIT_FAILURE;
 	}
@@ -138,8 +149,10 @@ void help() {
 	printf("-d\tUse dummy inputs (client only).\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
+	printf("-o [file]\tSpecify a shared library file for outputs (robot only).\n");
 }
 
+//Catch SIGINT and shut down properly
 void signalHandler(int signal) {
 	if(signal == SIGINT) {
 		printf("SIGINT received!\n");

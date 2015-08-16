@@ -37,7 +37,6 @@ TODO
 
 Pull requests welcome! Please try to keep the same code and commit message style.
 
-* Potentially move server, client, and robot functions into independent binaries
 * Use a makefile instead of a build script
 * Add more modules for different types of input and output
 * Test non-dummy output modules

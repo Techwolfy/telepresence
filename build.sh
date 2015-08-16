@@ -1,27 +1,40 @@
-#!/bin/sh
+#!/bin/bash
+shopt -s extglob
+
 #Build script for telepresence
-#Defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi.
+#BasicRobot defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi.
 
 CC="g++"
-OPTIONS="-std=c++11"
-INCLUDE="-I. -Imod/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include -Llib/pololu/static/lib -Llib/wiringPi/static/lib"
-LIBS="-lrt -lRapaPololuMaestro -lwiringPi"
-FILES="*.cpp mod/*.cpp"
+AR="ar rsc"
+OPTIONS="-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections"
+SHARED="-fPIC -shared"
+INCLUDE="-I. -Iinput/*.h -Ioutput/*.h -Iutil/*.h -Irobot/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include"
+LIBPATH="-Llib/pololu/static/lib -Llib/wiringPi/static/lib"
+LIBS="-lRapaPololuMaestro -ldl -lwiringPi"
+FILES="*.cpp input/*.cpp output/*.cpp util/*.cpp robot/*.cpp"
+
+#Object and archive files
+echo "Building object files..."
+${CC} ${OPTIONS} -c ${FILES} ${INCLUDE} $@
+${CC} ${OPTIONS} -DPOLOLU -c robot/basicRobot.cpp -o pololuRobot.o ${INCLUDE} $@
+${CC} ${OPTIONS} -DRASPI -c robot/basicRobot.cpp -o raspiRobot.o ${INCLUDE} $@
+${AR} telepresence.a !(*Robot*).o
 
 #telepresenced
-echo "Building telepresenced..."
-${CC} ${OPTIONS} -o telepresenced ${FILES} ${INCLUDE} ${LIBS} $@
+echo "Building telepresence..."
+${CC} ${OPTIONS} -o telepresence telepresence.a dummyRobot.o ${LIBPATH} ${LIBS} $@
 
-#telepresence-client
-echo "Building telepresence-client..."
-#Currently identical to 'telepresenced' binary, will be separated again later
-#${CC} ${OPTIONS} -o telepresence-client ${FILES} ${INCLUDE} ${LIBS} $@
-cp telepresenced telepresence-client
+#dummy.so
+echo "Building dummy output module..."
+${CC} ${OPTIONS} ${SHARED} -o dummy.so basicRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
 
-#telepresence-pololu
-echo "Building telepresence-pololu..."
-${CC} ${OPTIONS} -DPOLOLU -o telepresence-pololu ${FILES} ${INCLUDE} ${LIBS} $@
+#pololu.so
+echo "Building pololu output module..."
+${CC} ${OPTIONS} ${SHARED} -o pololu.so pololuRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
 
-#telepresence-raspi
-echo "Building telepresence-raspi..."
-${CC} ${OPTIONS} -DRASPI -o telepresence-raspi ${FILES} ${INCLUDE} ${LIBS} $@
+#raspi.so
+echo "Building raspi output module..."
+${CC} ${OPTIONS} ${SHARED} -o raspi.so raspiRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
+
+#Clean up object and archive files
+rm *.o *.a

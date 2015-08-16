@@ -3,7 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <time.h>
-#include "watchdog.h"
+#include "util/watchdog.h"
 #include "telepacket.h"
 
 //Constructor

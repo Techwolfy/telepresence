@@ -3,15 +3,15 @@
 
 //Includes
 #include "server.h"
-#include "mod/motor.h"
-#include "mod/watchdog.h"
+#include "util/watchdog.h"
+#include "output/output.h"
 
 //Declaration
 class Robot : public Server {
 public:
 	//Constructor
 	Robot();
-	Robot(const char *address, const char *port);
+	Robot(const char *address, const char *port, const char *libFile);
 
 	//Destructor
 	~Robot();
@@ -21,11 +21,17 @@ public:
 
 private:
 	//Variables
-	Motor *motor;
 	Watchdog watchdog;
+	void *outputLibrary;
+	Output *output;
 
 	//Functions
+	void loadOutputLibrary(const char *filename);
 	void sendPing();
+
+	//Shared library functions
+	Output *(*createOutput)();
+	void (*destroyOutput)(Output *output);
 };
 
 #endif //ROBOT_H
