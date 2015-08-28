@@ -11,7 +11,7 @@ class Server {
 public:
 	//Constructor
 	Server();
-	Server(const char *address, const char *port);
+	Server(const char *address, const char *port, bool listen = true);
 
 	//Destructor
 	virtual ~Server();
@@ -28,6 +28,7 @@ protected:
 	struct sockaddr_in robotAddress;
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in unknownAddress;
+	bool listening;
 
 	//Functions
 	virtual void handlePing();

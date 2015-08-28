@@ -9,15 +9,21 @@
 #include "util/udpsocket.h"
 
 //Constructor
-Server::Server() : Server("0.0.0.0", "8353") {
+Server::Server() : Server("0.0.0.0", "8353", true) {
 
 }
 
-Server::Server(const char *address, const char *port) : unknownAddress{0},
-														clientAddress{0},
-														robotAddress{0} {
+Server::Server(const char *address, const char *port, bool listen /* = true */) : unknownAddress{0},
+																				  clientAddress{0},
+																				  robotAddress{0},
+																				  listening(listen) {
 	//Init socket
-	if(s.openSocket(address, port) < 0) {
+	if(listen) {
+		s.openSocket(address, port, NULL, NULL);
+	} else {
+		s.openSocket(NULL, NULL, address, port);
+	}
+	if(!s.isOpen()) {
 		printf("Socket initialization failed!\n");
 		throw std::runtime_error("socket initialization failed");
 	} else {
@@ -70,14 +76,18 @@ void Server::run() {
 
 //Process a received ping
 void Server::handlePing() {
-	if(in.isClient) {
-		printf("Ping %d received from client!\n", in.frameNum);
-		clientAddress = unknownAddress;
-		sendPing(clientAddress);
+	if(listening) {
+		if(in.isClient) {
+			printf("Ping %d received from client!\n", in.frameNum);
+			clientAddress = unknownAddress;
+			sendPing(clientAddress);
+		} else {
+			printf("Ping %d received from robot!\n", in.frameNum);
+			robotAddress = unknownAddress;
+			sendPing(robotAddress);
+		}
 	} else {
-		printf("Ping %d received from robot!\n", in.frameNum);
-		robotAddress = unknownAddress;
-		sendPing(robotAddress);
+		printf("Ping %d recieved!\n", in.frameNum);
 	}
 }
 

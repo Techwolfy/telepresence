@@ -11,9 +11,9 @@ class Client : public Server {
 public:
 	//Constructor
 	Client();
-	Client(const char *address, const char *port, bool dummy = false);
-	Client(const char *address, const char *port, int joyNum);
-	Client(const char *address, const char *port, char *file);
+	Client(const char *address, const char *port, bool listen, bool dummy = false);
+	Client(const char *address, const char *port, bool listen, int joyNum);
+	Client(const char *address, const char *port, bool listen, char *file);
 
 	//Destructor
 	~Client();
@@ -23,7 +23,6 @@ public:
 
 private:
 	//Variables
-	bool autodetect;
 	Input *input;
 
 	//Functions

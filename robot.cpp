@@ -15,10 +15,14 @@ Robot::Robot() : Robot("127.0.0.1", "8353", NULL) {
 
 }
 
-Robot::Robot(const char *address, const char *port, const char *libFile) : Server(address, port),
-													  					   watchdog(500),
-													  					   outputLibrary(NULL),
-													  					   output(NULL) {
+Robot::Robot(const char *address, const char *port, bool listen) : Robot(address, port, listen, NULL) {
+
+}
+
+Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Server(address, port, listen),
+																						watchdog(500),
+																						outputLibrary(NULL),
+																						output(NULL) {
 	//Set up output object
 	if(libFile != NULL) {
 		loadOutputLibrary(libFile);
@@ -99,8 +103,7 @@ void Robot::run() {
 
 	//Handle pings
 	if(in.ping) {
-		printf("Ping %d recieved!\n", in.frameNum);
-		return;
+		handlePing();
 	}
 
 	//Data recieved from client
@@ -112,6 +115,10 @@ void Robot::run() {
 
 //Ping the server
 void Robot::sendPing() {
-	s.writeData((void *)&ping, sizeof(ping));
+	if(listening) {
+		sendPing(clientAddress);
+	} else {
+		s.writeData((void *)&ping, sizeof(ping));
+	}
 	ping.frameNum++;
 }

@@ -15,28 +15,25 @@ public:
 	~UDPSocket();
 
 	//Functions
-	int openSocket(const char *address, const char *port);
+	int openSocket(const char *localAddress, const char *localPort, const char *remoteAddress, const char *remotePort);
 	void closeSocket();
+	bool isOpen();
 	void blockRead(bool block);
 	int readData(void *data, int length);
 	int readData(void *data, int length, sockaddr_in *remote);
 	void writeData(void *data, int length);
 	void writeData(sockaddr_in *remote, void *data, int length);
 
-	//Variables
-	const static char *SOCKET_DEFAULT_SERVER_ADDRESS;
-	const static char *SOCKET_DEFAULT_CLIENT_ADDRESS;
-	const static char *SOCKET_DEFAULT_PORT;
-
 private:
 	//Variables
+	bool open;
 	int serverFD;
 	int readFlags;
 	struct sockaddr_in server;
 	struct sockaddr_in client;
 
 	//Functions
-	int openSocket(unsigned long address, int port);
+	int openSocket(unsigned long localAddress, int localPort, unsigned long remoteAddress, int remotePort);
 
 };
 

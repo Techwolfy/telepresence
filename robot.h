@@ -11,7 +11,8 @@ class Robot : public Server {
 public:
 	//Constructor
 	Robot();
-	Robot(const char *address, const char *port, const char *libFile);
+	Robot(const char *address, const char *port, bool listen);
+	Robot(const char *address, const char *port, bool listen, const char *libFile);
 
 	//Destructor
 	~Robot();
@@ -26,6 +27,7 @@ private:
 	Output *output;
 
 	//Functions
+	using Server::sendPing;
 	void loadOutputLibrary(const char *filename);
 	void sendPing();
 

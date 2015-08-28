@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
 	char port[6] = "8353";
+	bool listen = false;
 	Server *telepresence = NULL;
 	bool dummy = false;
 	int clientJoystick = -1;
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvscra:p:dj:f:o:")) != -1) {
+	while((c = getopt(argc, argv, "hvscrla:p:dj:f:o:")) != -1) {
 		switch(c) {
 			case 's':	//Server mode
 				isClient = false;
@@ -47,6 +48,9 @@ int main(int argc, char *argv[]) {
 			case 'r':	//Robot mode
 				isClient = false;
 				isRobot = true;
+				break;
+			case 'l':	//Listening mode
+				listen = true;
 				break;
 			case 'a':	//Remote host
 				strcpy(host, optarg);
@@ -82,10 +86,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	//Ensure host parameter (first non-option argument) was provided if necessary
-	if(isRobot && strcmp(host, "0.0.0.0") == 0) {
-		fprintf(stderr, "Missing hostname! Exiting.\n");
-		return EXIT_FAILURE;
+	//Check if local client port should be ephemeral
+	if((isClient || isRobot) && !listen && strcmp(host, "0.0.0.0") == 0) {
+			strcpy(host, "127.0.0.1");
 	}
 
 	//Set up SIGINT handler
@@ -99,23 +102,23 @@ int main(int argc, char *argv[]) {
 	//Create main program object
 	try {
 		if(!isClient && !isRobot) {
-			telepresence = new Server(host, port);	//Server doesn't need to explicitly connect to anything
+			telepresence = new Server(host, port);
 		} else if(isClient) {
 			if(dummy) {
-				telepresence = new Client(host, port, dummy);
+				telepresence = new Client(host, port, listen, dummy);
 			} else if(clientJoystick >= 0) {
-				telepresence = new Client(host, port, clientJoystick);
+				telepresence = new Client(host, port, listen, clientJoystick);
 			} else if(file[0] != 0) {
-				telepresence = new Client(host, port, file);
+				telepresence = new Client(host, port, listen, file);
 			} else {
 				printf("Client input type not specified!\n");
 				throw std::runtime_error("missing client input type");
 			}
 		} else {
 			if(libFile[0] != 0) {
-				telepresence = new Robot(host, port, libFile);
+				telepresence = new Robot(host, port, listen, libFile);
 			} else {
-				telepresence = new Robot(host, port, NULL);
+				telepresence = new Robot(host, port, listen);
 			}
 		}
 	} catch(std::exception &e) {
@@ -139,14 +142,15 @@ int main(int argc, char *argv[]) {
 void help() {
 	printf("Telepresence client v1.0.0 by Daniel Ring\n");
 	printf("Usage:\ttelepresence [mode] [options]\n");
-	printf("-h\tPrints this help message.\n");
-	printf("-v\tPrints this version message.\n");
-	printf("-s\tRun in server mode (relaying data).\n");
-	printf("-c\tRun in client mode (controlling a robot).\n");
-	printf("-r\tRun in robot mode (controlled by a client).\n");
-	printf("-a [address]\tRemote server address (required for robot mode; default: autodetect).\n");
-	printf("-p [port]\tUse alternate port (default: 8353).\n");
-	printf("-d\tUse dummy inputs (client only).\n");
+	printf("-h\t\tPrints this help message.\n");
+	printf("-v\t\tPrints this version message.\n");
+	printf("-s\t\tRun in server mode (relaying data).\n");
+	printf("-c\t\tRun in client mode (controlling a robot).\n");
+	printf("-r\t\tRun in robot mode (controlled by a client).\n");
+	printf("-l\t\tListening mode (client/robot only; default: off).\n");
+	printf("-a [address]\tLocal listening address / remote server address (default: 0.0.0.0 / 127.0.0.1).\n");
+	printf("-p [port]\tLocal listening port / remote server port (default: 8353).\n");
+	printf("-d\t\tUse dummy inputs (client only).\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
 	printf("-o [file]\tSpecify a shared library file for outputs (robot only).\n");

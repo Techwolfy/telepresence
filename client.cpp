@@ -12,19 +12,14 @@
 #include "input/controlFile.h"
 
 //Constructor
-Client::Client() : Client("127.0.0.1", "8353") {
+Client::Client() : Client("127.0.0.1", "8353", false) {
 
 }
 
-Client::Client(const char *address, const char *port, bool dummy /* = false */) : Server(address, port),
-																				  autodetect(false) {
+Client::Client(const char *address, const char *port, bool listen, bool dummy /* = false */) : Server(address, port, listen) {
 	//Set up dummy joystick if necessary
 	if(dummy) {
 		input = new DummyJoystick();
-	}
-
-	if(strcmp(address, "0.0.0.0") == 0) {
-		autodetect = true;
 	}
 
 	//Set up output packet
@@ -43,12 +38,12 @@ Client::Client(const char *address, const char *port, bool dummy /* = false */) 
 	sendPing();
 }
 
-Client::Client(const char *address, const char *port, int joyNum) : Client(address, port) {
+Client::Client(const char *address, const char *port, bool listen, int joyNum) : Client(address, port, listen) {
 	//Set up joystick
 	input = new Joystick(joyNum);
 }
 
-Client::Client(const char *address, const char *port, char *file) : Client(address, port) {
+Client::Client(const char *address, const char *port, bool listen, char *file) : Client(address, port, listen) {
 	//Set up web client pipe
 	input = new ControlFile(file);
 }
@@ -64,10 +59,8 @@ void Client::run() {
 	//Respond to pings
 	in.head = '\0';
 	if(s.readData((void *)&in, sizeof(in), &unknownAddress) > 0 && in.head == 'T') {
-		if(in.ping && autodetect) {
+		if(in.ping) {
 			handlePing();
-		} else if(in.ping) {
-			printf("Ping %d recieved!\n", in.frameNum);
 		}
 	}
 
@@ -83,7 +76,7 @@ void Client::run() {
 
 	//Send data to robot
 	printData(out);
-	if(autodetect) {
+	if(listening) {
 		s.writeData(&robotAddress, (void *)&out, sizeof(out));
 	} else {
 		s.writeData((void *)&out, sizeof(out));
@@ -92,7 +85,7 @@ void Client::run() {
 
 //Ping the server
 void Client::sendPing() {
-	if(autodetect) {
+	if(listening) {
 		sendPing(robotAddress);
 	} else {
 		s.writeData((void *)&ping, sizeof(ping));

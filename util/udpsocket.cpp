@@ -11,13 +11,9 @@
 #include <netdb.h>
 #include "util/udpsocket.h"
 
-//Variables
-const char *UDPSocket::SOCKET_DEFAULT_SERVER_ADDRESS = "0.0.0.0";
-const char *UDPSocket::SOCKET_DEFAULT_CLIENT_ADDRESS = "127.0.0.1";
-const char *UDPSocket::SOCKET_DEFAULT_PORT = "8353";
-
 //Constructor
-UDPSocket::UDPSocket() : serverFD(0),
+UDPSocket::UDPSocket() : open(false),
+						 serverFD(0),
 						 readFlags(0),
 						 server{0},
 						 client{0} {
@@ -31,7 +27,7 @@ UDPSocket::~UDPSocket() {
 
 //Functions
 //Open and bind a UDP socket
-int UDPSocket::openSocket(unsigned long address, int port) {
+int UDPSocket::openSocket(unsigned long localAddress, int localPort, unsigned long remoteAddress, int remotePort) {
 	//Make sure an existing socket doesn't get leaked
 	if(serverFD != 0) {
 		closeSocket();
@@ -46,13 +42,13 @@ int UDPSocket::openSocket(unsigned long address, int port) {
 
 	//Set up server struct
 	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = htonl(INADDR_ANY);		//0.0.0.0
-	server.sin_port = port;
+	server.sin_addr.s_addr = localAddress;
+	server.sin_port = localPort;
 
 	//Set up client struct
 	client.sin_family = AF_INET;
-	client.sin_addr.s_addr = address;
-	client.sin_port = port;
+	client.sin_addr.s_addr = remoteAddress;
+	client.sin_port = remotePort;
 
 	//Bind socket
 	if(bind(serverFD, (struct sockaddr *)&server, sizeof(server)) < 0) {
@@ -60,31 +56,64 @@ int UDPSocket::openSocket(unsigned long address, int port) {
 		return -1;
 	}
 
+	open = true;
 	return 0;
 }
 
 //Map provided address and port to network values
-int UDPSocket::openSocket(const char *address, const char *port) {
-	unsigned long addressNum = 0;
-	int portNum = htons(atoi(port));
+int UDPSocket::openSocket(const char *localAddress, const char *localPort, const char *remoteAddress, const char *remotePort) {
+	unsigned long localAddressNum = 0;
+	unsigned long remoteAddressNum = 0;
+	int localPortNum = 0;
+	int remotePortNum = 0;
 
-	//Look up the hostname stored in address
-	struct hostent *host = gethostbyname(address);
-	if(host == NULL) {
-		printf("Error finding host!\n");
-		return -1;
+	//Look up the hostname stored in localAddress, if any
+	if(localAddress == NULL) {
+		localAddressNum = htonl(INADDR_ANY);	//0.0.0.0
+	} else {
+		struct hostent *localHost = gethostbyname(localAddress);
+		if(localHost == NULL) {
+			printf("Error finding local host!\n");
+			return -1;
+		} else {
+			localAddressNum = *(unsigned long *)localHost->h_addr_list[0];
+		}
 	}
 
-	addressNum = *(unsigned long *)host->h_addr_list[0];
-	printf("Host %s:%s found as %lu:%d.\n", address, port, ntohl(addressNum), ntohs(portNum));
-    return openSocket(addressNum, portNum);
+	if(localPort != NULL) {
+		localPortNum = htons(atoi(localPort));
+	}
+
+	//Look up the hostname stored in remoteAddress
+	if(remoteAddress != NULL) {
+		struct hostent *remoteHost = gethostbyname(remoteAddress);
+		if(remoteHost == NULL) {
+			printf("Error finding remote host!\n");
+			return -1;
+		}
+		remoteAddressNum = *(unsigned long *)remoteHost->h_addr_list[0];
+	}
+
+	if(remotePort != NULL) {
+		remotePortNum = htons(atoi(remotePort));
+	}
+
+	printf("Local host %s:%s found as %lu:%d.\n", localAddress, localPort, ntohl(localAddressNum), ntohs(localPortNum));
+	printf("Remote host %s:%s found as %lu:%d.\n", remoteAddress, remotePort, ntohl(remoteAddressNum), ntohs(remotePortNum));
+    return openSocket(localAddressNum, localPortNum, remoteAddressNum, remotePortNum);
 }
 
 //Close socket
 void UDPSocket::closeSocket() {
 	if(serverFD != 0) {
 		close(serverFD);
+		open = false;
 	}
+}
+
+//Tell the caller whether or not the socket was successfully opened
+bool UDPSocket::isOpen() {
+	return open;
 }
 
 //Set whether or not to block when reading or writing data (default: block)
@@ -130,7 +159,11 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 
 //Write to client defined when socket opened
 void UDPSocket::writeData(void *data, int length) {
-	writeData(&client, data, length);
+	if(client.sin_addr.s_addr != 0) {
+		writeData(&client, data, length);
+	} else {
+		printf("Error writing to socket!\n");
+	}
 }
 
 //Write to arbitrary client
