@@ -32,7 +32,7 @@ void DummyRobot::control(int numAxes, double axes[], int numButtons, bool button
 		printf("Axis %d: %f\n", i, axes[i]);
 	}
 	for(int i = 0; i < numButtons; i++) {
-		printf("Button %d: %c\n", i, buttons[i]);
+		printf("Button %d: %c\n", i, buttons[i] ? 'T' : 'F');
 	}
 }
 

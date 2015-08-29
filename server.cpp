@@ -7,6 +7,7 @@
 #include "server.h"
 #include "telepacket.h"
 #include "util/udpsocket.h"
+#include "util/watchdog.h"
 
 //Constructor
 Server::Server() : Server("0.0.0.0", "8353", true) {
@@ -16,7 +17,8 @@ Server::Server() : Server("0.0.0.0", "8353", true) {
 Server::Server(const char *address, const char *port, bool listen /* = true */) : unknownAddress{0},
 																				  clientAddress{0},
 																				  robotAddress{0},
-																				  listening(listen) {
+																				  listening(listen),
+																				  keepalive(500) {
 	//Init socket
 	if(listen) {
 		s.openSocket(address, port, NULL, NULL);
@@ -54,6 +56,18 @@ Server::~Server() {
 //Functions
 //Main server loop
 void Server::run() {
+	//Display last received data and send pings once every 500ms
+	if(!keepalive.isAlive()) {
+		if(in.isClient) {	//Data recieved from client
+			printData(in);
+		} else {
+			printf("Packet %d recieved from robot.\n", in.frameNum);
+		}
+		sendPing(clientAddress);
+		sendPing(robotAddress);
+		keepalive.feed();
+	}
+
 	//Get data from stream
 	in.head = '\0';
 	if(s.readData((void *)&in, sizeof(in), &unknownAddress) < 0 || in.head != 'T') {
@@ -62,12 +76,6 @@ void Server::run() {
 	if(in.ping) {
 		handlePing();
 		return;
-	}
-
-	if(in.isClient) {	//Data recieved from client
-		printData(in);
-	} else {
-		printf("Packet %d recieved from robot.\n", in.frameNum);
 	}
 
 	//Send client's data to robot

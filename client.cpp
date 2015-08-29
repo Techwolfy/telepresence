@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include "client.h"
 #include "util/udpsocket.h"
+#include "util/watchdog.h"
 #include "input/input.h"
 #include "input/dummyJoystick.h"
 #include "input/joystick.h"
@@ -56,6 +57,13 @@ Client::~Client() {
 //Functions
 //Main client loop
 void Client::run() {
+	//Display last sent data and send a ping once every 500ms
+	if(!keepalive.isAlive()) {
+		printData(out);
+		sendPing();
+		keepalive.feed();
+	}
+
 	//Respond to pings
 	in.head = '\0';
 	if(s.readData((void *)&in, sizeof(in), &unknownAddress) > 0 && in.head == 'T') {
@@ -75,7 +83,6 @@ void Client::run() {
 	}
 
 	//Send data to robot
-	printData(out);
 	if(listening) {
 		s.writeData(&robotAddress, (void *)&out, sizeof(out));
 	} else {

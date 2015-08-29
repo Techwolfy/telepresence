@@ -21,7 +21,7 @@ public:
 
 private:
 	//Variables
-	double interval;
+	unsigned long interval;
 	time_t lastTime;
 };
 

@@ -23,7 +23,7 @@ Watchdog::~Watchdog() {
 
 //Functions
 void Watchdog::setTimeout(unsigned long timeout) {
-	interval = (double)timeout / 1000.0;
+	interval = timeout;
 }
 
 void Watchdog::feed() {
@@ -31,10 +31,5 @@ void Watchdog::feed() {
 }
 
 bool Watchdog::isAlive() {
-	if(difftime(time(NULL), lastTime) <= interval) {
-		return true;
-	} else {
-		printf("Watchdog died!\n");
-		return false;
-	}
+	return difftime(time(NULL), lastTime) * 1000 <= interval;
 }

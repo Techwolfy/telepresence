@@ -51,7 +51,7 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 //Destructor
 Robot::~Robot() {
 	destroyOutput(output);
-	if(outputLibrary == NULL) {
+	if(outputLibrary != NULL) {
 		dlclose(outputLibrary);
 	}
 }
@@ -93,6 +93,17 @@ void Robot::run() {
 		output->stop();
 	}
 
+	//Display last received data and send a ping once every 500ms
+	if(!keepalive.isAlive()) {
+		if(watchdog.isAlive()) {
+			printData(in);
+		} else {
+			printf("Watchdog died!\n");
+		}
+		sendPing();
+		keepalive.feed();
+	}
+
 	//Get control data from server
 	in.head = '\0';
 	if(s.readData((void *)&in, sizeof(in)) < 0 || in.head != 'T') {
@@ -108,7 +119,6 @@ void Robot::run() {
 
 	//Data recieved from client
 	if(in.isClient && watchdog.isAlive()) {
-		printData(in);
 		output->control(TelePacket::NUM_AXES, in.axes, TelePacket::NUM_BUTTONS, in.buttons);
 	}
 }

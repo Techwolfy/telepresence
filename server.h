@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include "telepacket.h"
 #include "util/udpsocket.h"
+#include "util/watchdog.h"
 
 //Declaration
 class Server {
@@ -29,6 +30,7 @@ protected:
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in unknownAddress;
 	bool listening;
+	Watchdog keepalive;
 
 	//Functions
 	virtual void handlePing();
