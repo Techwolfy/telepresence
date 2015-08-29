@@ -1,8 +1,11 @@
 #Object files
 *.o
 
+#Archive files
+*.a
+
 #Output files
-telepresenced
-telepresence-client
-telepresence-pololu
-telepresence-raspi
+telepresence
+dummy.so
+pololu.so
+raspi.so

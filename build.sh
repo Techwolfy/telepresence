@@ -13,6 +13,9 @@ LIBPATH="-Llib/pololu/static/lib -Llib/wiringPi/static/lib"
 LIBS="-lRapaPololuMaestro -ldl -lwiringPi"
 FILES="*.cpp input/*.cpp output/*.cpp util/*.cpp robot/*.cpp"
 
+#Clean up old build files
+rm -f *.o *.a *.so telepresence
+
 #Object and archive files
 echo "Building object files..."
 ${CC} ${OPTIONS} -c ${FILES} ${INCLUDE} $@
@@ -20,7 +23,7 @@ ${CC} ${OPTIONS} -DPOLOLU -c robot/basicRobot.cpp -o pololuRobot.o ${INCLUDE} $@
 ${CC} ${OPTIONS} -DRASPI -c robot/basicRobot.cpp -o raspiRobot.o ${INCLUDE} $@
 ${AR} telepresence.a !(*Robot*).o
 
-#telepresenced
+#telepresence
 echo "Building telepresence..."
 ${CC} ${OPTIONS} -o telepresence telepresence.a dummyRobot.o ${LIBPATH} ${LIBS} $@
 
@@ -37,4 +40,4 @@ echo "Building raspi output module..."
 ${CC} ${OPTIONS} ${SHARED} -o raspi.so raspiRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
 
 #Clean up object and archive files
-rm *.o *.a
+rm -f *.o *.a
