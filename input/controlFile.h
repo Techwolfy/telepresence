@@ -2,7 +2,7 @@
 #define CONTROLFILE_H
 
 //Includes
-#include "input.h"
+#include "input/input.h"
 
 //Declaration
 class ControlFile : public Input {

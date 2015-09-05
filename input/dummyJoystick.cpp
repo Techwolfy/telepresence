@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "dummyJoystick.h"
+#include "util/watchdog.h"
 
 //Constants
 const int DummyJoystick::JOY_X_AXIS = 0;
@@ -15,7 +16,7 @@ const double DummyJoystick::DUMMY_JOY_AXIS_VALUE = 0.5;
 const bool DummyJoystick::DUMMY_JOY_BUTTON_VALUE = true;
 
 //Constructor
-DummyJoystick::DummyJoystick() {
+DummyJoystick::DummyJoystick() : ratelimit(500) {
 	printf("Dummy joystick created.\n");
 }
 
@@ -27,7 +28,10 @@ DummyJoystick::~DummyJoystick() {
 //Functions
 //"Update" the static dummy joystick values
 void DummyJoystick::update() {
-	printf("Dummy joystick updated!\n");
+	if(ratelimit.expired()) {
+		printf("Dummy joystick updated!\n");
+		ratelimit.reset();
+	}
 }
 
 //Retrieve the number of axes on the dummy joystick

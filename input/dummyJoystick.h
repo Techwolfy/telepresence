@@ -2,7 +2,8 @@
 #define DUMMYJOYSTICK_H
 
 //Includes
-#include "input.h"
+#include "input/input.h"
+#include "util/watchdog.h"
 
 //Declaration
 class DummyJoystick : public Input {
@@ -31,6 +32,7 @@ private:
 	const static int DUMMY_JOY_BUTTONS;
 	const static double DUMMY_JOY_AXIS_VALUE;
 	const static bool DUMMY_JOY_BUTTON_VALUE;
+	Watchdog ratelimit;
 };
 
 #endif //DUMMYJOYSTICK_H

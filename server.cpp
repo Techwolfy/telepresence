@@ -65,6 +65,7 @@ void Server::run() {
 		}
 		sendPing(clientAddress);
 		sendPing(robotAddress);
+		ping.frameNum++;
 		keepalive.feed();
 	}
 
@@ -88,11 +89,9 @@ void Server::handlePing() {
 		if(in.isClient) {
 			printf("Ping %d received from client!\n", in.frameNum);
 			clientAddress = unknownAddress;
-			sendPing(clientAddress);
 		} else {
 			printf("Ping %d received from robot!\n", in.frameNum);
 			robotAddress = unknownAddress;
-			sendPing(robotAddress);
 		}
 	} else {
 		printf("Ping %d recieved!\n", in.frameNum);

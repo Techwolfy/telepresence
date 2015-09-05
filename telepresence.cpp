@@ -115,10 +115,13 @@ int main(int argc, char *argv[]) {
 				throw std::runtime_error("missing client input type");
 			}
 		} else {
-			if(libFile[0] != 0) {
+			if(dummy) {
+				telepresence = new Robot(host, port, listen);
+			} else if(libFile[0] != 0) {
 				telepresence = new Robot(host, port, listen, libFile);
 			} else {
-				telepresence = new Robot(host, port, listen);
+				printf("Robot output type not specified!\n");
+				throw std::runtime_error("missing robot output type");
 			}
 		}
 	} catch(std::exception &e) {
@@ -140,7 +143,7 @@ int main(int argc, char *argv[]) {
 
 //Output a help message to the console
 void help() {
-	printf("Telepresence client v1.0.0 by Daniel Ring\n");
+	printf("Telepresence v1.0.0 by Daniel Ring\n");
 	printf("Usage:\ttelepresence [mode] [options]\n");
 	printf("-h\t\tPrints this help message.\n");
 	printf("-v\t\tPrints this version message.\n");
@@ -150,7 +153,7 @@ void help() {
 	printf("-l\t\tListening mode (client/robot only; default: off).\n");
 	printf("-a [address]\tLocal listening address / remote server address (default: 0.0.0.0 / 127.0.0.1).\n");
 	printf("-p [port]\tLocal listening port / remote server port (default: 8353).\n");
-	printf("-d\t\tUse dummy inputs (client only).\n");
+	printf("-d\t\tUse dummy inputs / outputs.\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
 	printf("-o [file]\tSpecify a shared library file for outputs (robot only).\n");

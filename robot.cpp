@@ -20,7 +20,7 @@ Robot::Robot(const char *address, const char *port, bool listen) : Robot(address
 }
 
 Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Server(address, port, listen),
-																						watchdog(500),
+																						watchdog(500, false),
 																						outputLibrary(NULL),
 																						output(NULL) {
 	//Set up output object
@@ -97,8 +97,6 @@ void Robot::run() {
 	if(!keepalive.isAlive()) {
 		if(watchdog.isAlive()) {
 			printData(in);
-		} else {
-			printf("Watchdog died!\n");
 		}
 		sendPing();
 		keepalive.feed();

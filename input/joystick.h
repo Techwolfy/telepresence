@@ -3,7 +3,7 @@
 
 //Includes
 #include <linux/joystick.h>
-#include "input.h"
+#include "input/input.h"
 
 //Declaration
 class Joystick : public Input {

@@ -3,9 +3,11 @@
 //Includes
 #include <stdio.h>
 #include "robot/dummyRobot.h"
+#include "util/watchdog.h"
 
 //Constructor
-DummyRobot::DummyRobot() {
+DummyRobot::DummyRobot() : ratelimitControl(500),
+						   ratelimitStop(500) {
 	printf("Dummy robot created.\n");
 }
 
@@ -27,16 +29,22 @@ extern "C" void destroyRobot(Output *output) {
 //Functions
 //Dummy robot; output values to console
 void DummyRobot::control(int numAxes, double axes[], int numButtons, bool buttons[]) {
-	printf("Dummy robot control() called.\n");
-	for(int i = 0; i < numAxes; i++) {
-		printf("Axis %d: %f\n", i, axes[i]);
-	}
-	for(int i = 0; i < numButtons; i++) {
-		printf("Button %d: %c\n", i, buttons[i] ? 'T' : 'F');
+	if(ratelimitControl.expired()) {
+		printf("Dummy robot control() called.\n");
+		for(int i = 0; i < numAxes; i++) {
+			printf("Axis %d: %f\n", i, axes[i]);
+		}
+		for(int i = 0; i < numButtons; i++) {
+			printf("Button %d: %c\n", i, buttons[i] ? 'T' : 'F');
+		}
+		ratelimitControl.reset();
 	}
 }
 
 //Dummy robot; output stop message to console
 void DummyRobot::stop() {
-	printf("Dummy robot stop() called.\n");
+	if(ratelimitStop.expired()) {
+		printf("Dummy robot stop() called.\n");
+		ratelimitStop.reset();
+	}
 }

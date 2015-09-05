@@ -2,14 +2,14 @@
 #define WATCHDOG_H
 
 //Includes
-#include <time.h>
+#include <chrono>
 
 //Declaration
 class Watchdog {
 public:
 	//Constructor
 	Watchdog();
-	Watchdog(unsigned long timeout);
+	Watchdog(unsigned long timeout, bool silent = true);
 
 	//Destructor
 	~Watchdog();
@@ -17,12 +17,15 @@ public:
 	//Functions
 	void setTimeout(unsigned long timeout);
 	void feed();
+	void reset();
 	bool isAlive();
+	bool expired();
 
 private:
 	//Variables
 	unsigned long interval;
-	time_t lastTime;
+	std::chrono::steady_clock::time_point lastTime;
+	bool muted;
 };
 
 #endif //WATCHDOG_H

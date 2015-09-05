@@ -151,9 +151,6 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 		return -1;
 	}
 
-	if(remote != NULL) {
-		printf("Packet received from %lu:%d.\n", ntohl(remote->sin_addr.s_addr), ntohs(remote->sin_port));
-	}
 	return readLength;
 }
 
@@ -170,7 +167,5 @@ void UDPSocket::writeData(void *data, int length) {
 void UDPSocket::writeData(sockaddr_in *remote, void *data, int length) {
 	if(sendto(serverFD, data, length, 0, (struct sockaddr *)remote, sizeof(*remote)) < 0) {
 		printf("Error writing to socket!\n");
-	} else {
-		printf("Packet sent to %lu:%d.\n", ntohl(remote->sin_addr.s_addr), ntohs(remote->sin_port));
 	}
 }
