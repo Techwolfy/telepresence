@@ -11,7 +11,7 @@ Pololu::Pololu() : Pololu("/dev/ttyACM0", 9600) {
 
 }
 
-Pololu::Pololu(const char *file, int baud) {
+Pololu::Pololu(const char *file, unsigned int baud) {
 	//Set up Pololu interface
 	pololu = RPM::SerialInterface::createSerialInterface(file, baud);
 	if(pololu->isOpen()) {
@@ -42,12 +42,12 @@ void Pololu::control(int numValues, double values[]) {
 //Stop all motors
 void Pololu::stop() {
 	for(int i = 0; i < 6; i++) {
-		pololu->setTargetCP(i, 0.0);
+		pololu->setTargetCP(i, 6000);
 	}
 }
 
 //Scale power from (-1.0, 1.0) to Pololu range of (4000, 8000)
-double Pololu::scalePower(double power) {
+unsigned short Pololu::scalePower(double power) {
 	if(power > 1.0) {
 		power = 1.0;
 	} else if(power < -1.0) {
@@ -55,8 +55,5 @@ double Pololu::scalePower(double power) {
 	}
 
 	//Scale from (-1.0, 1.0) to (4000, 8000) quarter-of-microseconds; 0 is 6000 (neutral)
-	power *= 2000.0;
-	power += 6000.0;
-
-	return power;
+	return (power * 2000) + 6000;
 }

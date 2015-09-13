@@ -10,7 +10,7 @@ class Pololu : public Motor {
 public:
 	//Constructor
 	Pololu();
-	Pololu(const char *file, int baud);
+	Pololu(const char *file, unsigned int baud);
 
 	//Destructor
 	~Pololu();
@@ -24,7 +24,7 @@ private:
 	RPM::SerialInterface *pololu;
 
 	//Functions
-	double scalePower(double power);
+	unsigned short scalePower(double power);
 };
 
 #endif //POLOLU_H

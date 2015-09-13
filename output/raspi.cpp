@@ -49,6 +49,12 @@ void RasPi::stop() {
 
 //Scale power from (-1.0, 1.0) to RasPi range of (10, 20)
 double RasPi::scalePower(double power) {
+	if(power > 1.0) {
+		power = 1.0;
+	} else if(power < -1.0) {
+		power = -1.0;
+	}
+
 	//-1 to 1, -5 to 5, 10 to 20
 	return (power * 5) + 15;
 }

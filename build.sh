@@ -2,7 +2,7 @@
 shopt -s extglob
 
 #Build script for telepresence
-#BasicRobot defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device or -DRASPI for a Raspberry Pi.
+#BasicRobot defaults to a dummy motor; use -DPOLOLU for a 6-port Pololu device, -DRASPI for a Raspberry Pi, or -DPARALLAX for a 16-port Parallax USB servo controller.
 
 CC="g++"
 AR="ar rsc"
@@ -21,6 +21,7 @@ echo "Building object files..."
 ${CC} ${OPTIONS} -c ${FILES} ${INCLUDE} $@
 ${CC} ${OPTIONS} -DPOLOLU -c robot/basicRobot.cpp -o pololuRobot.o ${INCLUDE} $@
 ${CC} ${OPTIONS} -DRASPI -c robot/basicRobot.cpp -o raspiRobot.o ${INCLUDE} $@
+${CC} ${OPTIONS} -DPARALLAX -c robot/basicRobot.cpp -o parallaxRobot.o ${INCLUDE} $@
 ${AR} telepresence.a !(*Robot*).o
 
 #telepresence
@@ -38,6 +39,10 @@ ${CC} ${OPTIONS} ${SHARED} -o pololu.so pololuRobot.o telepresence.a ${LIBPATH} 
 #raspi.so
 echo "Building raspi output module..."
 ${CC} ${OPTIONS} ${SHARED} -o raspi.so raspiRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
+
+#parallax.so
+echo "Building parallax output module..."
+${CC} ${OPTIONS} ${SHARED} -o parallax.so parallaxRobot.o telepresence.a ${LIBPATH} ${LIBS} $@
 
 #Clean up object and archive files
 rm -f *.o *.a

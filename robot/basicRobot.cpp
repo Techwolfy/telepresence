@@ -8,6 +8,8 @@
 	#include "output/pololu.h"
 #elif RASPI
 	#include "output/raspi.h"
+#elif PARALLAX
+	#include "output/parallax.h"
 #else
 	#include "output/dummyMotor.h"
 #endif
@@ -19,6 +21,8 @@ BasicRobot::BasicRobot() {
 		motor = new Pololu();
 	#elif RASPI
 		motor = new RasPi();
+	#elif PARALLAX
+		motor = new Parallax();
 	#else
 		motor = new DummyMotor();
 	#endif

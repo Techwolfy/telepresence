@@ -22,8 +22,8 @@ Joystick::Joystick() : Joystick(0) {
 
 }
 
-Joystick::Joystick(int joyNum) : joyFD(),
-								 //joyEvent(default),
+Joystick::Joystick(int joyNum) : joyFD(-1),
+								 joyEvent{0},
 								 numAxes(0),
 								 numButtons(0),
 								 axes(NULL),
