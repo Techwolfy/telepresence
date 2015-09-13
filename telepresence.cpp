@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <exception>
 #include <stdexcept>
+#include <chrono>
 #include "server.h"
 #include "client.h"
 #include "robot.h"
@@ -22,6 +23,8 @@ bool running;
 //Functions
 int main(int argc, char *argv[]) {
 	running = false;
+	unsigned long elapsedTime = 0;
+	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	bool isClient = false;
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
@@ -132,8 +135,12 @@ int main(int argc, char *argv[]) {
 	//Infinite loop
 	running = true;
 	while(running) {
+		startTime = std::chrono::steady_clock::now();
 		telepresence->run();
-		usleep(5000); //0.005 seconds
+		elapsedTime = (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startTime)).count();
+		if(20000 - elapsedTime > 0) {
+			usleep(20000 - elapsedTime);	//Remainder of 20 milliseconds, if any
+		}
 	}
 
 	delete telepresence;
