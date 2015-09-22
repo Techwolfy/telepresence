@@ -10,7 +10,7 @@ OPTIONS="-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections"
 SHARED="-fPIC -shared"
 INCLUDE="-I. -Iinput/*.h -Ioutput/*.h -Iutil/*.h -Irobot/*.h -Ilib/pololu/static/include -Ilib/wiringPi/static/include"
 LIBPATH="-Llib/pololu/static/lib -Llib/wiringPi/static/lib"
-LIBS="-lRapaPololuMaestro -ldl -lwiringPi"
+LIBS="-ldl -ljsoncpp -lRapaPololuMaestro -lwiringPi"
 FILES="*.cpp input/*.cpp output/*.cpp util/*.cpp robot/*.cpp"
 
 #Clean up old build files

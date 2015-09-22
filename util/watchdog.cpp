@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <chrono>
 #include "util/watchdog.h"
-#include "telepacket.h"
 
 //Constructor
 Watchdog::Watchdog() : Watchdog(500) {

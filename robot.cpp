@@ -3,7 +3,9 @@
 //Includes
 #include <stdio.h>
 #include <dlfcn.h>
+#include <string>
 #include <stdexcept>
+#include <jsoncpp/json/json.h>
 #include "robot.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
@@ -22,7 +24,11 @@ Robot::Robot(const char *address, const char *port, bool listen) : Robot(address
 Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Server(address, port, listen),
 																						watchdog(500, false),
 																						outputLibrary(NULL),
-																						output(NULL) {
+																						output(NULL),
+																						axesSize(0),
+																						buttonsSize(0),
+																						axes(NULL),
+																						buttons(NULL) {
 	//Set up output object
 	if(libFile != NULL) {
 		loadOutputLibrary(libFile);
@@ -33,16 +39,16 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 	output = createOutput();
 
 	//Set up output packet
-	out.frameNum = 0;
-	out.isClient = false;
-	out.isRobot = true;
-	out.ping = false;
+	out["frameNum"] = 0;
+	out["isClient"] = false;
+	out["isRobot"] = true;
+	out["ping"] = false;
 
 	//Set up ping packet
-	ping.frameNum = 0;
-	ping.isClient = false;
-	ping.isRobot = true;
-	ping.ping = true;
+	ping["frameNum"] = 0;
+	ping["isClient"] = false;
+	ping["isRobot"] = true;
+	ping["ping"] = true;
 
 	//Send initialization ping
 	sendPing();
@@ -54,6 +60,8 @@ Robot::~Robot() {
 	if(outputLibrary != NULL) {
 		dlclose(outputLibrary);
 	}
+	delete[] axes;
+	delete[] buttons;
 }
 
 //Functions
@@ -103,21 +111,38 @@ void Robot::run() {
 	}
 
 	//Get control data from server
-	in.head = '\0';
-	if(s.readData((void *)&in, sizeof(in)) < 0 || in.head != 'T') {
+	buffer[0] = '\0';
+	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress) < 0 || buffer[0] == '\0') {
 		return;
 	} else {
+		reader.parse(buffer, in, false);
 		watchdog.feed();
 	}
 
 	//Handle pings
-	if(in.ping) {
+	if(in.get("ping", false).asBool()) {
 		handlePing();
 	}
 
 	//Data recieved from client
-	if(in.isClient && watchdog.isAlive()) {
-		output->control(TelePacket::NUM_AXES, in.axes, TelePacket::NUM_BUTTONS, in.buttons);
+	if(in.get("isClient", false).asBool() && watchdog.isAlive()) {
+		if(in["axes"].size() > 0 && in["axes"].size() != axesSize) {
+			axesSize = in["axes"].size();
+			delete[] axes;
+			axes = new double[axesSize];
+		}
+		if(in["buttons"].size() > 0 && in["buttons"].size() != buttonsSize) {
+			buttonsSize = in["buttons"].size();
+			delete[] buttons;
+			buttons = new bool[buttonsSize];
+		}
+		for(int i = 0; i < axesSize; i++) {
+			axes[i] = in["axes"].get(i, 0.0).asDouble();
+		}
+		for(int i = 0; i < buttonsSize; i++) {
+			buttons[i] = in["buttons"].get(i, 0.0).asBool();
+		}
+		output->control(axesSize, axes, buttonsSize, buttons);
 	}
 }
 
@@ -126,7 +151,8 @@ void Robot::sendPing() {
 	if(listening) {
 		sendPing(clientAddress);
 	} else {
-		s.writeData((void *)&ping, sizeof(ping));
+		std::string pingJSON = writer.write(ping);
+		s.writeData((void *)pingJSON.c_str(), pingJSON.length());
 	}
-	ping.frameNum++;
+	ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;
 }

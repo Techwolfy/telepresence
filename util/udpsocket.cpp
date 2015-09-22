@@ -14,7 +14,7 @@
 //Constructor
 UDPSocket::UDPSocket() : open(false),
 						 serverFD(0),
-						 readFlags(0),
+						 readFlags(MSG_TRUNC),
 						 server{0},
 						 client{0} {
 
@@ -145,8 +145,8 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 			printf("Error reading from socket!\n");
 		}
 		return -1;
-	} else if(readLength != length) {
-		printf("Not enough bytes read from socket!\n");
+	} else if(readLength > length) {
+		printf("Received datagram larger than buffer!\n");
 		printf("Expected bytes: %d Received bytes: %d\n", length, readLength);
 		return -1;
 	}

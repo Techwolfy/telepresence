@@ -3,7 +3,7 @@
 
 //Includes
 #include <netinet/in.h>
-#include "telepacket.h"
+#include <jsoncpp/json/json.h>
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
 
@@ -23,9 +23,12 @@ public:
 protected:
 	//Variables
 	UDPSocket s;
-	TelePacket in;
-	TelePacket out;
-	TelePacket ping;
+	char buffer[1024];
+	Json::Reader reader;
+	Json::FastWriter writer;
+	Json::Value in;
+	Json::Value out;
+	Json::Value ping;
 	struct sockaddr_in robotAddress;
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in unknownAddress;
@@ -35,7 +38,7 @@ protected:
 	//Functions
 	virtual void handlePing();
 	virtual void sendPing(struct sockaddr_in &remoteAddress);
-	static void printData(TelePacket &data);
+	static void printData(Json::Value &data);
 };
 
 #endif //SERVER_H

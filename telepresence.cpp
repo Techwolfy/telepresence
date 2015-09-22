@@ -23,7 +23,7 @@ bool running;
 //Functions
 int main(int argc, char *argv[]) {
 	running = false;
-	unsigned long elapsedTime = 0;
+	long elapsedTime = 0;
 	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	bool isClient = false;
 	bool isRobot = false;

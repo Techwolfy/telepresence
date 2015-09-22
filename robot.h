@@ -25,6 +25,10 @@ private:
 	Watchdog watchdog;
 	void *outputLibrary;
 	Output *output;
+	int axesSize;
+	int buttonsSize;
+	double *axes;
+	bool *buttons;
 
 	//Functions
 	using Server::sendPing;

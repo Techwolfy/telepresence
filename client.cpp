@@ -3,7 +3,9 @@
 //Includes
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <netinet/in.h>
+#include <jsoncpp/json/json.h>
 #include "client.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
@@ -24,16 +26,16 @@ Client::Client(const char *address, const char *port, bool listen, bool dummy /*
 	}
 
 	//Set up output packet
-	out.frameNum = 0;
-	out.isClient = true;
-	out.isRobot = false;
-	out.ping = false;
+	out["frameNum"] = 0;
+	out["isClient"] = true;
+	out["isRobot"] = false;
+	out["ping"] = false;
 
 	//Set up ping packet
-	ping.frameNum = 0;
-	ping.isClient = true;
-	ping.isRobot = false;
-	ping.ping = true;
+	ping["frameNum"] = 0;
+	ping["isClient"] = true;
+	ping["isRobot"] = false;
+	ping["ping"] = true;
 
 	//Send initialization ping
 	sendPing();
@@ -65,28 +67,30 @@ void Client::run() {
 	}
 
 	//Respond to pings
-	in.head = '\0';
-	if(s.readData((void *)&in, sizeof(in), &unknownAddress) > 0 && in.head == 'T') {
-		if(in.ping) {
+	buffer[0] = '\0';
+	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress) > 0 && buffer[0] != '\0') {
+		reader.parse(buffer, in, false);
+		if(in.get("ping", false).asBool()) {
 			handlePing();
 		}
 	}
 
 	//Prepare joystick data for robot
 	input->update();
-	out.frameNum++;
-	for(int i = 0; i < input->getNumAxes() && i < TelePacket::NUM_AXES; i++) {
-		out.axes[i] = input->getAxis(i);
+	out["frameNum"] = out.get("frameNum", 0).asUInt() + 1;
+	for(int i = 0; i < input->getNumAxes(); i++) {
+		out["axes"][i] = input->getAxis(i);
 	}
-	for(int i = 0; i < input->getNumButtons() && i < TelePacket::NUM_BUTTONS; i++) {
-		out.buttons[i] = input->getButton(i);
+	for(int i = 0; i < input->getNumButtons(); i++) {
+		out["buttons"][i] = input->getButton(i);
 	}
 
 	//Send data to robot
+	std::string outJSON = writer.write(out);
 	if(listening) {
-		s.writeData(&robotAddress, (void *)&out, sizeof(out));
+		s.writeData(&robotAddress, (void *)outJSON.c_str(), outJSON.length());
 	} else {
-		s.writeData((void *)&out, sizeof(out));
+		s.writeData((void *)outJSON.c_str(), outJSON.length());
 	}
 }
 
@@ -95,7 +99,8 @@ void Client::sendPing() {
 	if(listening) {
 		sendPing(robotAddress);
 	} else {
-		s.writeData((void *)&ping, sizeof(ping));
+		std::string pingJSON = writer.write(ping);
+		s.writeData((void *)pingJSON.c_str(), pingJSON.length());
 	}
-	ping.frameNum++;
+	ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;
 }

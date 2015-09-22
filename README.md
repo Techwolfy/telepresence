@@ -13,7 +13,7 @@ Telepresence is a project designed to provide an easy method of communicating wi
 Building Telepresence
 ---------------------
 
-Currently, only Linux (and unix-like) operating systems are supported. Telepresence itself has no dependencies, but its input and output modules depend on the various libraries associated with their hardware. These are currently selected with compile-time flags, which are detailed in the build script.
+Currently, only Linux operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules depend on the various libraries associated with their hardware.
 
 To build telepresenced and the various client and robot binaries, simply run [`build.sh`](build.sh).
 
@@ -42,4 +42,3 @@ Pull requests welcome! Please try to keep the same code and commit message style
 * Test non-dummy output modules
 * Add some method of bidirectional streaming for video and audio (e.g. via Youtube or Twitch)
 * Prevent multiple clients and/or robots from connecting to the same server simultaneously
-* Switch network protocol to Protobuf, JSON, or better for wider compatibility
