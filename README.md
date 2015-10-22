@@ -37,7 +37,6 @@ TODO
 
 Pull requests welcome! Please try to keep the same code and commit message style.
 
-* Use a makefile instead of a build script
 * Add more modules for different types of input and output
 * Test non-dummy output modules
 * Add some method of bidirectional streaming for video and audio (e.g. via Youtube or Twitch)

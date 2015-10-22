@@ -1,7 +1,6 @@
 //BasicRobot.cpp
 
 //Includes
-#include <stdio.h>
 #include "robot/basicRobot.h"
 #include "output/motor.h"
 #ifdef POLOLU
