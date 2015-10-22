@@ -15,7 +15,7 @@ Building Telepresence
 
 Currently, only Linux operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules depend on the various libraries associated with their hardware.
 
-To build telepresenced and the various client and robot binaries, simply run [`build.sh`](build.sh).
+To build telepresenced and the various client and robot binaries, simply run `make`.
 
 
 Using Telepresence

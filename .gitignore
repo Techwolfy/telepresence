@@ -1,11 +1,10 @@
-#Object files
+#Object and dependency files
 *.o
+*.d
 
 #Archive files
 *.a
 
 #Output files
 telepresence
-dummy.so
-pololu.so
-raspi.so
+*.so
