@@ -12,59 +12,65 @@ POLOLULIBS=-Llib/pololu/static/lib -lRapaPololuMaestro
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
 OBJS=client.o robot.o server.o telepresence.o controlFile.o dummyJoystick.o joystick.o parallax.o pololu.o raspi.o udpsocket.o watchdog.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o raspiRobot.o
+BUILDOBJS=$(addprefix build/, $(OBJS))
+BUILDROBOTS=$(addprefix build/, $(ROBOTS))
 
 
 #Build everything
 .PHONY: all
-all: telepresence dummy.so pololu.so raspi.so parallax.so
-
-#Generic object file build message
-.PHONY: obj-build
-obj-build:
-	@echo "Building object files..."
+all: bin/telepresence bin/dummy.so bin/pololu.so bin/raspi.so bin/parallax.so
 
 #Load dependency rules
--include $(OBJS:.o=.d)
--include $(ROBOTS:.o=.d)
+-include $(BUILDOBJS:.o=.d)
+-include $(BUILDROBOTS:.o=.d)
+
+#Create folder for intermediate build files
+build:
+	@echo "Building object files..."
+	mkdir -p build
 
 #Generic compilation rule
-%.o: %.cpp obj-build
+build/%.o: %.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -MMD
 
 #Basic robot compilation rules
-parallaxRobot.o: basicRobot.cpp obj-build
+build/parallaxRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DPARALLAX -MMD
 
-pololuRobot.o: basicRobot.cpp obj-build
+build/pololuRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DPOLOLU -MMD
 
-raspiRobot.o: basicRobot.cpp obj-build
+build/raspiRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DRASPI -MMD
 
 #Build archive of universal files
-telepresence.a: $(OBJS) obj-build
-	$(AR) telepresence.a $(OBJS)
+build/telepresence.a: $(BUILDOBJS) | build
+	$(AR) $@ $(BUILDOBJS)
 
+
+#Create folder for output binaries
+bin:
+	mkdir -p bin
 
 #Build main binary
-telepresence: telepresence.a dummyRobot.o
+bin/telepresence: build/telepresence.a build/dummyRobot.o | bin
 	@echo "Building telepresence binary..."
 	$(CXX) -o $@ $^ $(LIBS)
 
 #Build output module shared libraries
-dummy.so: telepresence.a basicRobot.o
+bin/dummy.so: build/telepresence.a build/basicRobot.o | bin
 	@echo "Building dummy output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
-parallax.so: telepresence.a parallaxRobot.o
+bin/parallax.so: build/telepresence.a build/parallaxRobot.o | bin
 	@echo "Building parallax output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
-pololu.so: telepresence.a pololuRobot.o
+bin/pololu.so: build/telepresence.a build/pololuRobot.o | bin
 	@echo "Building pololu output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS) $(POLOLULIBS)
 
-raspi.so: telepresence.a raspiRobot.o
+bin/raspi.so: build/telepresence.a build/raspiRobot.o | bin
 	@echo "Building raspi output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS) $(RASPILIBS)
 
@@ -73,4 +79,4 @@ raspi.so: telepresence.a raspiRobot.o
 .PHONY: clean
 clean:
 	@echo "Cleaning up old build files..."
-	rm -f *.o *.d *.a *.so telepresence
+	rm -rf build/ bin/
