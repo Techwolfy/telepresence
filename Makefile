@@ -10,7 +10,7 @@ SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp
 POLOLULIBS=-Llib/pololu/static/lib -lRapaPololuMaestro
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
-OBJS=client.o robot.o server.o telepresence.o controlFile.o dummyJoystick.o joystick.o parallax.o pololu.o raspi.o udpsocket.o watchdog.o
+OBJS=client.o robot.o server.o telepresence.o controlFile.o dummyJoystick.o joystick.o dummyMotor.o parallax.o pololu.o raspi.o udpsocket.o watchdog.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o raspiRobot.o
 BUILDOBJS=$(addprefix build/, $(OBJS))
 BUILDROBOTS=$(addprefix build/, $(ROBOTS))
@@ -43,7 +43,7 @@ build/pololuRobot.o: basicRobot.cpp | build
 build/raspiRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DRASPI -MMD
 
-#Build archive of universal files
+#Build archive of robot-independent files
 build/telepresence.a: $(BUILDOBJS) | build
 	$(AR) $@ $(BUILDOBJS)
 
@@ -58,19 +58,19 @@ bin/telepresence: build/telepresence.a build/dummyRobot.o | bin
 	$(CXX) -o $@ $^ $(LIBS)
 
 #Build output module shared libraries
-bin/dummy.so: build/telepresence.a build/basicRobot.o | bin
+bin/dummy.so: build/basicRobot.o build/telepresence.a | bin
 	@echo "Building dummy output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
-bin/parallax.so: build/telepresence.a build/parallaxRobot.o | bin
+bin/parallax.so: build/parallaxRobot.o build/telepresence.a | bin
 	@echo "Building parallax output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
-bin/pololu.so: build/telepresence.a build/pololuRobot.o | bin
+bin/pololu.so: build/pololuRobot.o build/telepresence.a | bin
 	@echo "Building pololu output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS) $(POLOLULIBS)
 
-bin/raspi.so: build/telepresence.a build/raspiRobot.o | bin
+bin/raspi.so: build/raspiRobot.o build/telepresence.a | bin
 	@echo "Building raspi output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS) $(RASPILIBS)
 
