@@ -8,7 +8,6 @@ CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -I
 LFLAGS=
 SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp
-POLOLULIBS=-Llib/pololu/static/lib -lRapaPololuMaestro
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
 OBJS=client.o robot.o server.o telepresence.o controlFile.o dummyJoystick.o joystick.o dummyMotor.o parallax.o pololu.o raspi.o udpsocket.o watchdog.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o raspiRobot.o
@@ -68,7 +67,7 @@ bin/parallax.so: build/parallaxRobot.o build/telepresence.a | bin
 
 bin/pololu.so: build/pololuRobot.o build/telepresence.a | bin
 	@echo "Building pololu output module..."
-	$(CXX) $(SHARED) -o $@ $^ $(LIBS) $(POLOLULIBS)
+	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/raspi.so: build/raspiRobot.o build/telepresence.a | bin
 	@echo "Building raspi output module..."
