@@ -2,6 +2,7 @@
 
 //Includes
 #include <stdio.h>
+#include <chrono>
 #include <string>
 #include <stdexcept>
 #include <netinet/in.h>
@@ -59,12 +60,14 @@ Server::~Server() {
 //Main server loop
 void Server::run() {
 	//Display last received data and send pings once every 500ms
-	if(!keepalive.isAlive()) {
+	//Don't display pings, just wait for the next loop
+	if(!keepalive.isAlive() && !in.get("ping", false).asBool()) {
 		if(in.get("isClient", true).asBool()) {	//Data recieved from client
 			printData(in);
 		} else {
 			printf("Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
 		}
+		ping["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 		sendPing(clientAddress);
 		sendPing(robotAddress);
 		ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;
@@ -113,6 +116,7 @@ void Server::sendPing(struct sockaddr_in &remoteAddress) {
 //Print the contents of a data packet to the console
 void Server::printData(Json::Value &data) {
 	printf("Client frame: %d\n", data.get("frameNum", 0).asUInt());
+	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
 	for(int i = 0; i < data["axes"].size(); i++) {
 		printf("Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
 	}

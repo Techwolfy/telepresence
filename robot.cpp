@@ -3,6 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <dlfcn.h>
+#include <chrono>
 #include <string>
 #include <stdexcept>
 #include <jsoncpp/json/json.h>
@@ -43,12 +44,14 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 	out["isClient"] = false;
 	out["isRobot"] = true;
 	out["ping"] = false;
+	out["time"] = 0;
 
 	//Set up ping packet
 	ping["frameNum"] = 0;
 	ping["isClient"] = false;
 	ping["isRobot"] = true;
 	ping["ping"] = true;
+	ping["time"] = 0;
 
 	//Send initialization ping
 	sendPing();
@@ -101,8 +104,9 @@ void Robot::run() {
 		output->stop();
 	}
 
-	//Display last received data and send a ping once every 500ms
-	if(!keepalive.isAlive()) {
+	//Display last received data and send a ping once every ~500ms
+	//Don't display pings, just wait for the next loop
+	if(!keepalive.isAlive() && !in.get("ping", false).asBool()) {
 		if(watchdog.isAlive()) {
 			printData(in);
 		}
@@ -148,6 +152,7 @@ void Robot::run() {
 
 //Ping the server
 void Robot::sendPing() {
+	ping["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 	if(listening) {
 		sendPing(clientAddress);
 	} else {

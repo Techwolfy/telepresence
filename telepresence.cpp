@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <chrono>
 #include <exception>
 #include <stdexcept>
-#include <chrono>
 #include "server.h"
 #include "client.h"
 #include "robot.h"
@@ -23,7 +23,7 @@ bool running;
 //Functions
 int main(int argc, char *argv[]) {
 	running = false;
-	long elapsedTime = 0;
+	long long elapsedTime = 0;
 	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	bool isClient = false;
 	bool isRobot = false;

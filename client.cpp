@@ -3,6 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <string.h>
+#include <chrono>
 #include <string>
 #include <netinet/in.h>
 #include <jsoncpp/json/json.h>
@@ -30,12 +31,14 @@ Client::Client(const char *address, const char *port, bool listen, bool dummy /*
 	out["isClient"] = true;
 	out["isRobot"] = false;
 	out["ping"] = false;
+	out["time"] = 0;
 
 	//Set up ping packet
 	ping["frameNum"] = 0;
 	ping["isClient"] = true;
 	ping["isRobot"] = false;
 	ping["ping"] = true;
+	ping["time"] = 0;
 
 	//Send initialization ping
 	sendPing();
@@ -64,6 +67,7 @@ void Client::run() {
 		printData(out);
 		sendPing();
 		keepalive.feed();
+		return;	//Never send more than one packet per cycle
 	}
 
 	//Respond to pings
@@ -84,6 +88,7 @@ void Client::run() {
 	for(int i = 0; i < input->getNumButtons(); i++) {
 		out["buttons"][i] = input->getButton(i);
 	}
+	out["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
 	//Send data to robot
 	std::string outJSON = writer.write(out);
@@ -96,6 +101,7 @@ void Client::run() {
 
 //Ping the server
 void Client::sendPing() {
+	ping["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 	if(listening) {
 		sendPing(robotAddress);
 	} else {
