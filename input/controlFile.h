@@ -2,6 +2,7 @@
 #define CONTROLFILE_H
 
 //Includes
+#include <jsoncpp/json/json.h>
 #include "input/input.h"
 
 //Declaration
@@ -16,8 +17,8 @@ public:
 
 	//Functions
 	void update();
-	int getNumButtons();
 	int getNumAxes();
+	int getNumButtons();
 	double getAxis(int axis);
 	bool getButton(int button);
 
@@ -25,10 +26,8 @@ private:
 	//Variables
 	FILE *file;
 	char buffer[255];
-	int numAxes;
-	int numButtons;
-	double *axes;
-	bool *buttons;
+	Json::Reader reader;
+	Json::Value json;
 };
 
 #endif //CONTROLFILE_H

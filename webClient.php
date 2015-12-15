@@ -1,15 +1,14 @@
 <?php
 
 	if($_SERVER["REQUEST_METHOD"] === "POST") {
-		//Decode client data
-		$json = json_decode(file_get_contents("php://input"));
-		$out = count($json->axes) . "," . count($json->buttons) . "," . implode(",", $json->axes) . "," .  implode(",", $json->buttons) . "\n";
+		//Retrieve client data
+		$json = file_get_contents("php://input");
 
 		//Open file
 		$file = fopen("pipe", "w");
 		if($file) {
 			//Send data to telepresence client pipe
-			fwrite($file, $out);
+			fwrite($file, $json);
 			fclose($file);
 		} else {
 			echo $errstr . " (" . $errno . ")\n";
@@ -121,8 +120,9 @@
 		var JOY_X = 0;
 		var JOY_Y = 1;
 
+		var frameNum = 0;
 		var axes = [0.0, 0.0];
-		var buttons = ["F", "F", "F", "F","'F", "F", "F", "F", "F", "F"];
+		var buttons = [false, false, false, false, false, false, false, false, false, false];
 
 		function joystick(axis, value) {
 			if(axis == JOY_ALL) {
@@ -135,12 +135,11 @@
 		}
 
 		function button(num) {
-			if(buttons[num] === "F") {
-				buttons[num] = "T";
+			buttons[num] = !buttons[num];
+			if(buttons[num]) {
 				document.getElementById("button" + num).value = "ON";
 				document.getElementById("button" + num).className = "on";
 			} else {
-				buttons[num] = "F";
 				document.getElementById("button" + num).value = "OFF";
 				document.getElementById("button" + num).className = "off";
 			}
@@ -149,6 +148,10 @@
 
 		function serialize() {
 			var postdata = {
+				frameNum: frameNum++,
+				isClient: true,
+				isRobot: false,
+				ping: false,
 				axes: axes,
 				buttons: buttons
 			};

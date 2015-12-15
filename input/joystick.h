@@ -17,8 +17,8 @@ public:
 
 	//Functions
 	void update();
-	int getNumButtons();
 	int getNumAxes();
+	int getNumButtons();
 	double getAxis(int axis);
 	bool getButton(int button);
 

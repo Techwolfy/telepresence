@@ -144,7 +144,7 @@ void Robot::run() {
 			axes[i] = in["axes"].get(i, 0.0).asDouble();
 		}
 		for(int i = 0; i < buttonsSize; i++) {
-			buttons[i] = in["buttons"].get(i, 0.0).asBool();
+			buttons[i] = in["buttons"].get(i, false).asBool();
 		}
 		output->control(axesSize, axes, buttonsSize, buttons);
 	}
