@@ -10,7 +10,7 @@ class Parallax : public Motor {
 public:
 	//Constructor
 	Parallax();
-	Parallax(const char *file, unsigned int baud);
+	Parallax(const char *file);
 
 	//Destructor
 	~Parallax();
@@ -25,7 +25,10 @@ private:
 	struct termios tty;
 
 	//Functions
+	void setBaudRate(bool increase);
+	double getVersion();
 	unsigned short scalePower(double power);
+	unsigned short getPower(unsigned char servoNum);
 	void setPower(unsigned char servoNum, unsigned short power);
 };
 

@@ -2,62 +2,70 @@
 
 //Includes
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <termios.h>
 #include <stdexcept>
+#include <sys/select.h>
 #include "output/parallax.h"
 
 //Constructor
-Parallax::Parallax() : Parallax("/dev/ttyUSB0", 2400) {
+Parallax::Parallax() : Parallax("/dev/ttyUSB0") {
 
 }
 
-Parallax::Parallax(const char *file, unsigned int baud) : parallaxFD(-1),
-														  tty{0} {
-	//Set up Parallax serial interface
+Parallax::Parallax(const char *file) : parallaxFD(-1),
+									   tty{0} {
+
+	//Set up Parallax servo controller serial interface
 		//http://linux.die.net/man/3/termios
 	parallaxFD = open(file, O_RDWR | O_NOCTTY);
 	if(parallaxFD < 0) {
-		printf("Parallax initialization failed!\n");
+		printf("Parallax servo controller initialization failed!\n");
 		throw std::runtime_error("parallax initialization failed");
 	}
 
-	/*//Get current serial port settings
-	if(tcgetattr(parallaxFD, &tty) != 0) {
-		perror("Error retreiving Parallax serial port settings");
-		throw std::runtime_error("parallax initialization failed");
-	}
+	//Serial connection is 2400 8 N 2, half duplex, with remote echo enabled:
+		//https://media.digikey.com/pdf/Data%20Sheets/Parallax%20PDFs/28823.pdf
+		//http://forums.parallax.com/discussion/comment/610370/#Comment_610370
 
-	//Set baud rate
-	if(cfsetospeed(&tty, (speed_t)baud) != 0 || cfsetispeed(&tty, (speed_t)baud) != 0) {
-		perror("Error setting Parallax serial port baud rate");
-		throw std::runtime_error("parallax initialization failed");
-	}
+	//Input/output flags
+	tty.c_iflag = 0;		//No input processing
+	tty.c_oflag = 0;		//No output processing
+	//Control flags
+	tty.c_cflag = CSIZE;	//Character size mask
+	tty.c_cflag |= CS8;		//8 data bits
+	tty.c_cflag &= ~PARENB;	//No parity
+	tty.c_cflag |= CSTOPB;	//2 stop bits
+	tty.c_cflag |= CREAD;	//Enable read
+	tty.c_cflag |= CLOCAL;	//Ignore control lines
+	//Local flags
+	tty.c_lflag = 0;		//No local processing: use non-canonical (raw) mode, disable echo, etc.
+	//Control characters
+	tty.c_cc[VMIN] = 8;		//Block on read until 8 chars have been read or read() request is satisfied
+	tty.c_cc[VTIME] = 1;	//1 decisecond read timeout (NB: All functions which receive 3-byte responses trigger this)
 
-	//Other connection settings?
-	tty.c_cflag		&=	~PARENB;			// Make 8n1
-	tty.c_cflag		&=	~CSTOPB;
-	tty.c_cflag		&=	~CSIZE;
-	tty.c_cflag		|=	CS8;
-	tty.c_cflag		&=	~CRTSCTS;			// no flow control
-	tty.c_cc[VMIN]	=	1;					// read doesn't block
-	tty.c_cc[VTIME]	=	5;					// 0.5 seconds read timeout
-	tty.c_cflag		|=	CREAD;
-	tty.c_cflag		|=	CLOCAL;		// turn on READ & ignore ctrl lines
-
-	//Set serial port to raw mode
-	cfmakeraw(&tty);
+	//Set intial baud rate
+	cfsetispeed(&tty, B2400);
+	cfsetospeed(&tty, B2400);
 
 	//Flush serial port and apply settings
-	tcflush(parallaxFD, TCIFLUSH);
-	if(tcsetattr(parallaxFD, TCSANOW, &tty) != 0) {
-		perror("Error applying Parallax serial port settings");
+	if(tcsetattr(parallaxFD, TCSAFLUSH, &tty) != 0) {
+		perror("Error applying Parallax servo controller serial port settings");
 		throw std::runtime_error("parallax initialization failed");
-	}*/
+	}
 
-	printf("Parallax initialized!\n");
+	try {
+		setBaudRate(true);
+	} catch(std::runtime_error &err) {
+		printf("Communication with Parallax servo controller failed, trying other baud rate...\n");
+		setBaudRate(false);
+		setBaudRate(true);
+	}
+
+	printf("Parallax initialized! Firmware Version: %.1f\n", getVersion());
 
 	//Make sure all motors are stopped
 	stop();
@@ -70,6 +78,52 @@ Parallax::~Parallax() {
 }
 
 //Functions
+//Increase device-side connection speed from 2400 baud to 38400 baud
+void Parallax::setBaudRate(bool increase) {
+	unsigned char command[8] = {'!','S', 'C', 'S', 'B', 'R', increase, '\r'};
+	write(parallaxFD, &command, sizeof(command));
+
+	//Remove remote echo from input buffer
+	read(parallaxFD, &command, sizeof(command));
+
+	//Set local baud rate
+	if(increase) {
+		cfsetispeed(&tty, B38400);
+		cfsetospeed(&tty, B38400);
+	} else {
+		cfsetispeed(&tty, B2400);
+		cfsetospeed(&tty, B2400);
+	}
+
+	//Flush serial port and apply settings
+	if(tcsetattr(parallaxFD, TCSAFLUSH, &tty) != 0) {
+		perror("Error setting Parallax serial port baud rate");
+		throw std::runtime_error("parallax speed increase failed");
+	}
+
+	//Check if a response was received
+	fd_set readSet;
+	FD_SET(parallaxFD, &readSet);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 100000;	//1 decisecond
+	if(select(parallaxFD + 1, &readSet, NULL, NULL, &timeout) != 1) {
+		//No response received; wrong baud rate?
+		printf("Error communicating with Parallax servo controller!\n");
+		throw std::runtime_error("parallax speed increase failed");
+	}
+
+	//Verify new baud rate
+	unsigned char data[3] = {0};
+	read(parallaxFD, &data, sizeof(data));
+	if(data[2] == increase || data[1] == increase) {	//FIXME: First character of response is sometimes dropped on baud rate increase, so check the second byte if the third is missing
+		printf("Parallax serial connection baud rate changed successfully!\n");
+	} else {
+		printf("Error setting Parallax servo controller baud rate!\n");
+		throw std::runtime_error("parallax speed increase failed");
+	}
+}
+
 //Set power of all motors
 void Parallax::control(int numValues, double values[]) {
 	for(int i = 0; i < numValues && i < 16; i++) {
@@ -84,6 +138,17 @@ void Parallax::stop() {
 	}
 }
 
+//Get firmware version of Parallax servo controller
+double Parallax::getVersion() {
+	unsigned char command[8] = {'!', 'S', 'C', 'V', 'E', 'R', '?', '\r'};
+	write(parallaxFD, &command, sizeof(command));
+	read(parallaxFD, &command, sizeof(command));	//Remove remote echo from input buffer
+
+	unsigned char data[4] = {0};
+	read(parallaxFD, &data, sizeof(data) - 1);
+	return atof((const char *)&data);
+}
+
 //Scale power from (-1.0, 1.0) to Parallax range of (250, 1250)
 unsigned short Parallax::scalePower(double power) {
 	if(power > 1.0) {
@@ -96,8 +161,25 @@ unsigned short Parallax::scalePower(double power) {
 	return (power * 500) + 750;
 }
 
-void Parallax::setPower(unsigned char servoNum, unsigned short power) {
-	unsigned char command[8] = {'!', 'S', 'C', servoNum, '\0', '\0', '\0', '\r'};
-	command[5] = power;		//Assumes a 16-bit little-endian short; clobbers command[6]
+//Get power of a specific motor
+unsigned short Parallax::getPower(unsigned char servoNum) {
+	unsigned char command[8] = {'!', 'S', 'C', 'R', 'S', 'P', servoNum, '\r'};
 	write(parallaxFD, &command, sizeof(command));
+	read(parallaxFD, &command, sizeof(command));	//Remove remote echo from input buffer
+
+	unsigned char data[3] = {0};
+	if(read(parallaxFD, &data, sizeof(data)) == 3) {
+		return (data[1] << 8) | data[2];
+	} else {
+		return 0;
+	}
+}
+
+//Set power of a specific motor
+void Parallax::setPower(unsigned char servoNum, unsigned short power) {
+	unsigned char command[8] = {'!', 'S', 'C', servoNum, 0, 0, 0, '\r'};
+	command[5] = power & 0xFF;			//Low byte
+	command[6] = (power >> 8) & 0xFF;	//High byte
+	write(parallaxFD, &command, sizeof(command));
+	read(parallaxFD, &command, sizeof(command));	//Remove remote echo from input buffer
 }
