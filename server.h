@@ -39,6 +39,7 @@ protected:
 	virtual void handlePing();
 	virtual void sendPing(struct sockaddr_in &remoteAddress);
 	static void printData(Json::Value &data);
+	static void printLatency(Json::Value &data);
 };
 
 #endif //SERVER_H

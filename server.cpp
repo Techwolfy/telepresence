@@ -108,6 +108,7 @@ void Server::handlePing() {
 	} else {
 		printf("Ping %d recieved!\n", in.get("frameNum", 0).asUInt());
 	}
+	printLatency(in);
 }
 
 //Attempt to ping a remote client
@@ -121,11 +122,15 @@ void Server::sendPing(struct sockaddr_in &remoteAddress) {
 //Print the contents of a data packet to the console
 void Server::printData(Json::Value &data) {
 	printf("Client frame: %d\n", data.get("frameNum", 0).asUInt());
-	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
 	for(int i = 0; i < data["axes"].size(); i++) {
 		printf("Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
 	}
 	for(int i = 0; i < data["buttons"].size(); i++) {
 		printf("Button %d: %c\n", i, data["buttons"].get(i, false).asBool() ? 'T' : 'F');
 	}
+}
+
+//Print the latency of a data packet to the console
+void Server::printLatency(Json::Value &data) {
+		printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
 }
