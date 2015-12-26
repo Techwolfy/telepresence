@@ -19,6 +19,7 @@ public:
 	void closeSocket();
 	bool isOpen();
 	void blockRead(bool block);
+	int setRecieveBufferLength(int length);
 	int readData(void *data, int length);
 	int readData(void *data, int length, sockaddr_in *remote);
 	void writeData(void *data, int length);
@@ -34,7 +35,6 @@ private:
 
 	//Functions
 	int openSocket(unsigned long localAddress, int localPort, unsigned long remoteAddress, int remotePort);
-
 };
 
 #endif //UDPSOCKET_H

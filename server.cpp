@@ -38,6 +38,11 @@ Server::Server(const char *address, const char *port, bool listen /* = true */) 
 	//Don't block on read so the main loop can check for SIGINT
 	s.blockRead(false);
 
+	//Limit socket receive buffer to prevent excessive lag
+	if(s.setRecieveBufferLength(25) < 0) {	//Max delay of 500ms at 50 frames per second
+		printf("Failed to limit socket recieve buffer; if control loops run slowly, lag may build up over time.\n");
+	}
+
 	//Set up output packet
 	out["frameNum"] = 0;
 	out["isClient"] = false;

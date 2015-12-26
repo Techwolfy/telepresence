@@ -125,6 +125,15 @@ void UDPSocket::blockRead(bool block) {
 	}
 }
 
+//Set maximum length of socket recieve buffer
+int UDPSocket::setRecieveBufferLength(int length) {
+	int result = setsockopt(serverFD, SOL_SOCKET, SO_RCVBUF, &length, sizeof(length));
+	if(result < 0) {
+		perror("Error setting UDP socket recieve buffer length");
+	}
+	return result;
+}
+
 //Read data from bound socket
 int UDPSocket::readData(void *data, int length) {
 	readData(data, length, NULL);
