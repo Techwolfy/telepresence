@@ -2,6 +2,7 @@
 #define POLOLU_H
 
 //Includes
+#include <termios.h>
 #include "output/motor.h"
 
 //Declaration
@@ -21,9 +22,11 @@ public:
 private:
 	//Variables
 	int pololuFD;
+	struct termios tty;
 
 	//Functions
 	unsigned short scalePower(double power);
+	unsigned short getPower(unsigned char channel);
 	void setPower(unsigned char channel, unsigned short power);
 };
 
