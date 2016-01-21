@@ -2,7 +2,11 @@
 #define SERVER_H
 
 //Includes
-#include <netinet/in.h>
+#ifndef _WIN32
+	#include <netinet/in.h>
+#else
+	#include <winsock.h>
+#endif
 #include <jsoncpp/json/json.h>
 #include "util/udpsocket.h"
 #include "util/watchdog.h"

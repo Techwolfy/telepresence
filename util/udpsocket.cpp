@@ -7,9 +7,14 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <sys/socket.h>
+#ifndef _WIN32
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <netdb.h>
+#else
+	#include <winsock.h>
+#endif
 #include <netinet/in.h>
-#include <netdb.h>
 #include "util/udpsocket.h"
 
 //Constructor

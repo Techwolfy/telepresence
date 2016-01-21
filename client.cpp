@@ -11,7 +11,9 @@
 #include "util/watchdog.h"
 #include "control/controller.h"
 #include "control/dummyJoystick.h"
-#include "control/joystick.h"
+#ifndef _WIN32	//FIXME: Disable joystick on Windows builds until code can be made compatible
+	#include "control/joystick.h"
+#endif
 #include "control/controlFile.h"
 
 //Constructor
@@ -47,7 +49,12 @@ Client::Client(const char *address, const char *port, const char *key, bool list
 
 Client::Client(const char *address, const char *port, const char *key, bool listen, int joyNum) : Client(address, port, key, listen) {
 	//Set up joystick
+#ifndef _WIN32
 	controller = new Joystick(joyNum);
+#else
+	printf("JOSTICKS ARE CURRENTLY UNSUPPORTED IN WINDOWS BUILDS!\n");
+	exit(1);
+#endif
 }
 
 Client::Client(const char *address, const char *port, const char *key, bool listen, char *file) : Client(address, port, key, listen) {

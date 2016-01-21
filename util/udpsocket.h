@@ -2,8 +2,12 @@
 #define UDPSOCKET_H
 
 //Includes
-#include <sys/socket.h>
-#include <netinet/in.h>
+#ifndef _WIN32
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+#else
+	#include <winsock.h>
+#endif
 
 //Declaration
 class UDPSocket {
