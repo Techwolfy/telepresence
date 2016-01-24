@@ -26,10 +26,16 @@ While exact usage instructions depend on the individual modules and hardware, th
 The server is only intended to echo packets from the client to the robot when both are behind restrictive firewalls, or when neither will have a static IP address or hostname. If using the web client, the client should be run from an accessible network location in listening mode instead of the server.
 
 
+Alternate Clients
+-----------------
+
+Telepresence network packets use a simple JSON protocol, so it is relatively simple to create alternate client and robot software. The web client included in this repository uses a daemon component due to cross-domain restrictions; that interface is also available, but is slightly less useful than the full protocol. A fully independent Android implementation of the client is available in the [`TelepresenceRemote`](https://github.com/Techwolfy/TelepresenceRemote) repository.
+
+
 License
 -------
 
-Telepresence is released under the GNU General Public License, version 3.0. For more informaion, please see [COPYING](COPYING).
+Telepresence is released under the GNU General Public License, version 3.0. For more informaion, please see [`COPYING`](COPYING).
 
 
 TODO
@@ -41,3 +47,4 @@ Pull requests welcome! Please try to keep the same code and commit message style
 * Test non-dummy output modules
 * Add some method of bidirectional streaming for video and audio (e.g. via Youtube or Twitch)
 * Prevent multiple clients and/or robots from connecting to the same server simultaneously
+* Support Windows builds with MinGW
