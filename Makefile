@@ -4,7 +4,7 @@
 VPATH=$(wildcard */)
 CXX=g++
 AR=ar rsc
-CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -I.
+CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -Wall -I.
 LFLAGS=
 SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp

@@ -120,7 +120,7 @@ void Parallax::setBaudRate(bool increase) {
 	unsigned char data[3] = {0};
 	//Response is "BR#", where # is the device's current baud rate setting (0x00 or 0x01)
 	//FIXME: First character of response is sometimes dropped on baud rate increase, so check the second byte if the third is missing
-	if(read(parallaxFD, &data, sizeof(data)) <= sizeof(data) - 1) {
+	if((unsigned int)read(parallaxFD, &data, sizeof(data)) <= (ssize_t)sizeof(data) - 1) {
 		printf("Error reading from Parallax servo controller!\n");
 	}
 	if(data[2] == increase || data[1] == increase) {
@@ -176,7 +176,7 @@ unsigned short Parallax::scalePower(double power) {
 
 //Get power of a specific channel
 unsigned short Parallax::getPower(unsigned char channel) {
-	if(channel < 0 || channel > 16) {
+	if(channel > 16) {
 		printf("Invalid PWM channel!\n");
 		return 0;
 	}
@@ -198,7 +198,7 @@ unsigned short Parallax::getPower(unsigned char channel) {
 
 //Set power of a specific channel
 void Parallax::setPower(unsigned char channel, unsigned short power) {
-	if(channel < 0 || channel > 16) {
+	if(channel > 16) {
 		printf("Invalid PWM channel!\n");
 		return;
 	}

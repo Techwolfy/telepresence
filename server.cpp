@@ -122,10 +122,10 @@ void Server::sendPing(struct sockaddr_in &remoteAddress) {
 //Print the contents of a data packet to the console
 void Server::printData(Json::Value &data) {
 	printf("Client frame: %d\n", data.get("frameNum", 0).asUInt());
-	for(int i = 0; i < data["axes"].size(); i++) {
+	for(unsigned int i = 0; i < data["axes"].size(); i++) {
 		printf("Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
 	}
-	for(int i = 0; i < data["buttons"].size(); i++) {
+	for(unsigned int i = 0; i < data["buttons"].size(); i++) {
 		printf("Button %d: %c\n", i, data["buttons"].get(i, false).asBool() ? 'T' : 'F');
 	}
 }

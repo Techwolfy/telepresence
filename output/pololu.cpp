@@ -92,7 +92,7 @@ unsigned short Pololu::scalePower(double power) {
 
 //Get power of a specific channel
 unsigned short Pololu::getPower(unsigned char channel) {
-	if(channel < 0 || channel > 24) {
+	if(channel > 24) {
 		printf("Invalid PWM channel!\n");
 		return 0;
 	}
@@ -114,7 +114,7 @@ unsigned short Pololu::getPower(unsigned char channel) {
 
 //Set power of a specific channel
 void Pololu::setPower(unsigned char channel, unsigned short power) {
-	if(channel < 0 || channel > 24) {
+	if(channel > 24) {
 		printf("Invalid PWM channel!\n");
 		return;
 	}

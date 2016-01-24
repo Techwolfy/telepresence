@@ -25,8 +25,8 @@ private:
 	Watchdog watchdog;
 	void *outputLibrary;
 	Output *output;
-	int axesSize;
-	int buttonsSize;
+	unsigned int axesSize;
+	unsigned int buttonsSize;
 	double *axes;
 	bool *buttons;
 

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -98,8 +99,8 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 		remotePortNum = htons(atoi(remotePort));
 	}
 
-	printf("Local host %s:%s found as %lu:%d.\n", localAddress, localPort, ntohl(localAddressNum), ntohs(localPortNum));
-	printf("Remote host %s:%s found as %lu:%d.\n", remoteAddress, remotePort, ntohl(remoteAddressNum), ntohs(remotePortNum));
+	printf("Local host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", localAddress, localPort, ntohl(localAddressNum), ntohs(localPortNum));
+	printf("Remote host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", remoteAddress, remotePort, ntohl(remoteAddressNum), ntohs(remotePortNum));
     return openSocket(localAddressNum, localPortNum, remoteAddressNum, remotePortNum);
 }
 
@@ -136,7 +137,7 @@ int UDPSocket::setRecieveBufferLength(int length) {
 
 //Read data from bound socket
 int UDPSocket::readData(void *data, int length) {
-	readData(data, length, NULL);
+	return readData(data, length, NULL);
 }
 
 //Read data from bound socket and retrieve remote sender address

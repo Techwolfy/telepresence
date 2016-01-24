@@ -2,7 +2,6 @@
 #define CLIENT_H
 
 //Includes
-#include <netinet/in.h>
 #include "server.h"
 #include "util/watchdog.h"
 #include "input/input.h"

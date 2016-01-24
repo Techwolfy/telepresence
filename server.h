@@ -29,9 +29,9 @@ protected:
 	Json::Value in;
 	Json::Value out;
 	Json::Value ping;
-	struct sockaddr_in robotAddress;
-	struct sockaddr_in clientAddress;
 	struct sockaddr_in unknownAddress;
+	struct sockaddr_in clientAddress;
+	struct sockaddr_in robotAddress;
 	bool listening;
 	Watchdog keepalive;
 

@@ -5,7 +5,6 @@
 #include <string.h>
 #include <chrono>
 #include <string>
-#include <netinet/in.h>
 #include <jsoncpp/json/json.h>
 #include "client.h"
 #include "util/udpsocket.h"
