@@ -15,7 +15,7 @@ public:
 	virtual void stop() = 0;
 };
 
-extern "C" Output* createRobot();
+extern "C" Output* createRobot(const char *options);
 extern "C" void destroyRobot(Output *output);
 
 #endif //OUTPUT_H

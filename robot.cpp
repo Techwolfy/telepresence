@@ -18,18 +18,22 @@ Robot::Robot() : Robot("127.0.0.1", "8353", NULL) {
 
 }
 
-Robot::Robot(const char *address, const char *port, bool listen) : Robot(address, port, listen, NULL) {
+Robot::Robot(const char *address, const char *port, bool listen) : Robot(address, port, listen, NULL, "") {
 
 }
 
-Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Server(address, port, listen),
-																						watchdog(500, false),
-																						outputLibrary(NULL),
-																						output(NULL),
-																						axesSize(0),
-																						buttonsSize(0),
-																						axes(NULL),
-																						buttons(NULL) {
+Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Robot(address, port, listen, libFile, NULL) {
+
+}
+
+Robot::Robot(const char *address, const char *port, bool listen, const char *libFile, const char *libOptions) : Server(address, port, listen),
+																												watchdog(500, false),
+																												outputLibrary(NULL),
+																												output(NULL),
+																												axesSize(0),
+																												buttonsSize(0),
+																												axes(NULL),
+																												buttons(NULL) {
 	//Set up output object
 	if(libFile != NULL) {
 		loadOutputLibrary(libFile);
@@ -37,7 +41,7 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 		createOutput = &createRobot;
 		destroyOutput = &destroyRobot;
 	}
-	output = createOutput();
+	output = createOutput(libOptions);
 
 	//Set up output packet
 	out["frameNum"] = 0;

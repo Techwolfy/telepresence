@@ -17,7 +17,7 @@ DummyRobot::~DummyRobot() {
 }
 
 //Shared library constructor
-extern "C" Output* createRobot() {
+extern "C" Output* createRobot(const char *options) {
 	return new DummyRobot();
 }
 

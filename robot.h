@@ -13,6 +13,7 @@ public:
 	Robot();
 	Robot(const char *address, const char *port, bool listen);
 	Robot(const char *address, const char *port, bool listen, const char *libFile);
+	Robot(const char *address, const char *port, bool listen, const char *libFile, const char *libOptions);
 
 	//Destructor
 	~Robot();
@@ -36,7 +37,7 @@ private:
 	void sendPing();
 
 	//Shared library functions
-	Output *(*createOutput)();
+	Output *(*createOutput)(const char *options);
 	void (*destroyOutput)(Output *output);
 };
 

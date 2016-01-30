@@ -12,13 +12,18 @@ RedRobot::RedRobot() {
 	motor = new Pololu();
 }
 
+RedRobot::RedRobot(const char *pololuFile) {
+	//Set up motor
+	motor = new Pololu(pololuFile);
+}
+
 //Destructor
 RedRobot::~RedRobot() {
 	delete motor;
 }
 
 //Shared library constructor
-extern "C" Output* createRobot() {
+extern "C" Output* createRobot(const char *options) {
 	return new RedRobot();
 }
 

@@ -1,6 +1,7 @@
 //BasicRobot.cpp
 
 //Includes
+#include <stdio.h>
 #include "robot/basicRobot.h"
 #include "output/motor.h"
 #ifdef POLOLU
@@ -13,7 +14,7 @@
 	#include "output/dummyMotor.h"
 #endif
 
-//Constructor
+//Constructors
 BasicRobot::BasicRobot() {
 	//Set up motor
 	#ifdef POLOLU
@@ -27,14 +28,32 @@ BasicRobot::BasicRobot() {
 	#endif
 }
 
+BasicRobot::BasicRobot(const char *deviceFile) {
+	printf("Output device file: %s\n", deviceFile);
+	//Set up motor
+	#ifdef POLOLU
+		motor = new Pololu(deviceFile);
+	#elif RASPI
+		motor = new RasPi();
+	#elif PARALLAX
+		motor = new Parallax(deviceFile);
+	#else
+		motor = new DummyMotor();
+	#endif
+}
+
 //Destructor
 BasicRobot::~BasicRobot() {
 	delete motor;
 }
 
 //Shared library constructor
-extern "C" Output* createRobot() {
-	return new BasicRobot();
+extern "C" Output* createRobot(const char *options) {
+	if(options != NULL) {
+		return new BasicRobot(options);
+	} else {
+		return new BasicRobot();
+	}
 }
 
 //Shared library destructor

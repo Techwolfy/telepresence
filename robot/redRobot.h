@@ -11,6 +11,8 @@ public:
 	//Constructor
 	RedRobot();
 
+	RedRobot(const char *pololuFile);
+
 	//Destructor
 	~RedRobot();
 

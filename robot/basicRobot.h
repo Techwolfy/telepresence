@@ -11,6 +11,8 @@ public:
 	//Constructor
 	BasicRobot();
 
+	BasicRobot(const char *deviceFile);
+
 	//Destructor
 	~BasicRobot();
 

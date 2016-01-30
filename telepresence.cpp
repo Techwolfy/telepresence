@@ -35,10 +35,11 @@ int main(int argc, char *argv[]) {
 	int clientJoystick = -1;
 	char file[255] = {0};
 	char libFile[255] = {0};
+	char robotOptions[255] = {0};
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvscrla:p:dj:f:o:")) != -1) {
+	while((c = getopt(argc, argv, "hvscrla:p:dj:f:o:x:")) != -1) {
 		switch(c) {
 			case 's':	//Server mode
 				isClient = false;
@@ -70,11 +71,14 @@ int main(int argc, char *argv[]) {
 			case 'f':	//File path [Client only]
 				strcpy(file, optarg);
 				break;
-			case 'o':
+			case 'o':	//Output library file path [Robot only]
 				strcpy(libFile, optarg);
 				break;
+			case 'x':	//Pass following option to robot library [Robot only]
+				strcpy(robotOptions, optarg);
+				break;
 			case '?':	//Unknown or malformed option
-				if(optopt == 'p' || optopt == 'j' || optopt == 'f' || optopt == 'o') {
+				if(optopt == 'p' || optopt == 'j' || optopt == 'f' || optopt == 'o' || optopt == 'x') {
 					printf("Option `-%c' requires an argument.\n", optopt);
 				} else {
 					printf("Unknown option `-%c'.\n\n", optopt);
@@ -121,7 +125,11 @@ int main(int argc, char *argv[]) {
 			if(dummy) {
 				telepresence = new Robot(host, port, listen);
 			} else if(libFile[0] != 0) {
-				telepresence = new Robot(host, port, listen, libFile);
+				if(robotOptions[0] != 0) {
+					telepresence = new Robot(host, port, listen, libFile, robotOptions);
+				} else {
+					telepresence = new Robot(host, port, listen, libFile);
+				}
 			} else {
 				printf("Robot output type not specified!\n");
 				throw std::runtime_error("missing robot output type");
@@ -164,6 +172,7 @@ void help() {
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
 	printf("-o [file]\tSpecify a shared library file for outputs (robot only).\n");
+	printf("-x [string]\tSpecify additional arguments for the output library (robot only).\n");
 }
 
 //Catch SIGINT and shut down properly
