@@ -9,15 +9,15 @@ LFLAGS=
 SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
-OBJS=client.o robot.o server.o telepresence.o controlFile.o dummyJoystick.o joystick.o dummyMotor.o parallax.o pololu.o raspi.o udpsocket.o watchdog.o
-ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o raspiRobot.o
+OBJS=telepresence.o server.o client.o robot.o udpsocket.o watchdog.o dummyJoystick.o joystick.o controlFile.o dummyMotor.o parallax.o pololu.o arduino.o raspi.o
+ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o
 BUILDOBJS=$(addprefix build/, $(OBJS))
 BUILDROBOTS=$(addprefix build/, $(ROBOTS))
 
 
 #Build everything
 .PHONY: all
-all: bin/telepresence bin/dummy.so bin/pololu.so bin/raspi.so bin/parallax.so
+all: bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so
 
 #Load dependency rules
 -include $(BUILDOBJS:.o=.d)
@@ -38,6 +38,9 @@ build/parallaxRobot.o: basicRobot.cpp | build
 
 build/pololuRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DPOLOLU -MMD
+
+build/arduinoRobot.o: basicRobot.cpp | build
+	$(CXX) -c -o $@ $< $(CFLAGS) -DARDUINO -MMD
 
 build/raspiRobot.o: basicRobot.cpp | build
 	$(CXX) -c -o $@ $< $(CFLAGS) -DRASPI -MMD
@@ -67,6 +70,10 @@ bin/parallax.so: build/parallaxRobot.o build/telepresence.a | bin
 
 bin/pololu.so: build/pololuRobot.o build/telepresence.a | bin
 	@echo "Building pololu output module..."
+	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
+
+bin/arduino.so: build/arduinoRobot.o build/telepresence.a | bin
+	@echo "Building arduino output module..."
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/raspi.so: build/raspiRobot.o build/telepresence.a | bin

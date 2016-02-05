@@ -10,6 +10,8 @@
 	#include "output/raspi.h"
 #elif PARALLAX
 	#include "output/parallax.h"
+#elif ARDUINO
+	#include "output/arduino.h"
 #else
 	#include "output/dummyMotor.h"
 #endif
@@ -23,6 +25,8 @@ BasicRobot::BasicRobot() {
 		motor = new RasPi();
 	#elif PARALLAX
 		motor = new Parallax();
+	#elif ARDUINO
+		motor = new Arduino();
 	#else
 		motor = new DummyMotor();
 	#endif
@@ -37,6 +41,8 @@ BasicRobot::BasicRobot(const char *deviceFile) {
 		motor = new RasPi();
 	#elif PARALLAX
 		motor = new Parallax(deviceFile);
+	#elif ARDUINO
+		motor = new Arduino(deviceFile);
 	#else
 		motor = new DummyMotor();
 	#endif
