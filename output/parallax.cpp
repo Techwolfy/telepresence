@@ -203,7 +203,7 @@ void Parallax::setPower(unsigned char channel, unsigned short power) {
 		return;
 	}
 
-	unsigned char command[8] = {'!', 'S', 'C', channel, 0, (unsigned char)(power & 0xFF), (unsigned char)((power >> 8) & 0xFF), '\r'};
+	unsigned char command[8] = {'!', 'S', 'C', channel, '\0', (unsigned char)(power & 0xFF), (unsigned char)((power >> 8) & 0xFF), '\r'};
 	//3 preamble byte, channel byte, ramp byte, power low byte, power high byte, command terminator
 	if(write(parallaxFD, &command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Parallax servo controller!\n");
