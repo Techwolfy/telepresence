@@ -24,10 +24,9 @@ all: libjsoncpp bin/telepresence bin/dummy.so
 
 #Build libjsoncpp from source
 libjsoncpp:
-	git clone https://github.com/open-source-parsers/jsoncpp.git lib/jsoncpp
-	cd lib/jsoncpp; git reset --hard d84702c #1.6.5
+	if [ -d lib/jsoncpp ]; then (cd lib/jsoncpp && git pull); else (git clone https://github.com/open-source-parsers/jsoncpp.git lib/jsoncpp); fi
+	#cd lib/jsoncpp; git reset --hard b4d2b65	#Upstreamed fix for sprintf bug
 	cd lib/jsoncpp; python amalgamate.py
-	cd lib/jsoncpp/dist; sed -i 's/#define snprintf std::snprintf//' jsoncpp.cpp	#Fix issues in https://github.com/open-source-parsers/jsoncpp/commit/9dd77dc0efeb3a89311c49d64e6761095c629e1e again
 	cd lib/jsoncpp; cp -r dist/ jsoncpp/
 
 
@@ -90,4 +89,4 @@ bin/dummy.so: build/basicRobot.o build/telepresence.a | bin
 .PHONY: clean
 clean:
 	@echo "Cleaning up old build files..."
-	rm -rf build/ bin/ lib/jsoncpp/
+	rm -rf build/ bin/
