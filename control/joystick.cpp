@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
-#include "input/joystick.h"
+#include "control/joystick.h"
 
 //Constants
 const int Joystick::JOY_X_AXIS = 0;

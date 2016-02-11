@@ -3,10 +3,10 @@
 
 //Includes
 #include <linux/joystick.h>
-#include "input/input.h"
+#include "control/controller.h"
 
 //Declaration
-class Joystick : public Input {
+class Joystick : public Controller {
 public:
 	//Constructor
 	Joystick();

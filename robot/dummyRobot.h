@@ -2,11 +2,11 @@
 #define DUMMYROBOT_H
 
 //Includes
-#include "output/output.h"
+#include "robot/robotInterface.h"
 #include "util/watchdog.h"
 
 //Declaration
-class DummyRobot : public Output {
+class DummyRobot : public RobotInterface {
 public:
 	//Constructor
 	DummyRobot();

@@ -4,7 +4,7 @@
 //Includes
 #include "server.h"
 #include "util/watchdog.h"
-#include "input/input.h"
+#include "control/controller.h"
 
 //Declaration
 class Client : public Server {
@@ -23,7 +23,7 @@ public:
 
 private:
 	//Variables
-	Input *input;
+	Controller *controller;
 
 	//Functions
 	using Server::sendPing;

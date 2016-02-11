@@ -4,7 +4,7 @@
 //Includes
 #include "server.h"
 #include "util/watchdog.h"
-#include "output/output.h"
+#include "robot/robotInterface.h"
 
 //Declaration
 class Robot : public Server {
@@ -24,8 +24,8 @@ public:
 private:
 	//Variables
 	Watchdog watchdog;
-	void *outputLibrary;
-	Output *output;
+	void *robotLibrary;
+	RobotInterface *interface;
 	unsigned int axesSize;
 	unsigned int buttonsSize;
 	double *axes;
@@ -33,12 +33,12 @@ private:
 
 	//Functions
 	using Server::sendPing;
-	void loadOutputLibrary(const char *filename);
+	void loadRobotLibrary(const char *filename);
 	void sendPing();
 
 	//Shared library functions
-	Output *(*createOutput)(const char *options);
-	void (*destroyOutput)(Output *output);
+	RobotInterface *(*createInterface)(const char *options);
+	void (*destroyInterface)(RobotInterface *interface);
 };
 
 #endif //ROBOT_H

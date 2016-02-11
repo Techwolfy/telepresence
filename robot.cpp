@@ -10,7 +10,7 @@
 #include "robot.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
-#include "output/output.h"
+#include "robot/robotInterface.h"
 #include "robot/dummyRobot.h"
 
 //Constructor
@@ -28,20 +28,20 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 
 Robot::Robot(const char *address, const char *port, bool listen, const char *libFile, const char *libOptions) : Server(address, port, listen),
 																												watchdog(500, false),
-																												outputLibrary(NULL),
-																												output(NULL),
+																												robotLibrary(NULL),
+																												interface(NULL),
 																												axesSize(0),
 																												buttonsSize(0),
 																												axes(NULL),
 																												buttons(NULL) {
-	//Set up output object
+	//Set up robot interface
 	if(libFile != NULL) {
-		loadOutputLibrary(libFile);
+		loadRobotLibrary(libFile);
 	} else {
-		createOutput = &createRobot;
-		destroyOutput = &destroyRobot;
+		createInterface = &createRobot;
+		destroyInterface = &destroyRobot;
 	}
-	output = createOutput(libOptions);
+	interface = createInterface(libOptions);
 
 	//Set up output packet
 	out["frameNum"] = 0;
@@ -63,41 +63,41 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 
 //Destructor
 Robot::~Robot() {
-	destroyOutput(output);
-	if(outputLibrary != NULL) {
-		dlclose(outputLibrary);
+	destroyInterface(interface);
+	if(robotLibrary != NULL) {
+		dlclose(robotLibrary);
 	}
 	delete[] axes;
 	delete[] buttons;
 }
 
 //Functions
-//Load library for outputs at runtime
-void Robot::loadOutputLibrary(const char *filename) {
+//Load library for robot I/O at runtime
+void Robot::loadRobotLibrary(const char *filename) {
 	//Load library
-	outputLibrary = dlopen(filename, RTLD_LAZY);
-	if(!outputLibrary) {
-		printf("Failed to load output library: %s\n", dlerror());
-		throw std::runtime_error("failed to load output library");
+	robotLibrary = dlopen(filename, RTLD_LAZY);
+	if(!robotLibrary) {
+		printf("Failed to load robot library: %s\n", dlerror());
+		throw std::runtime_error("failed to load robot library");
 	} else {
-		printf("Loaded output library: %s\n", filename);
+		printf("Loaded robot library: %s\n", filename);
 	}
 
-	//Set up output constructor
+	//Set up robot constructor
 	const char* symbolError = NULL;
-	*(void**)(&createOutput) = dlsym(outputLibrary, "createRobot");
+	*(void**)(&createInterface) = dlsym(robotLibrary, "createRobot");
 	symbolError = dlerror();
 	if(symbolError) {
-		printf("Failed to load output constructor: %s\n", dlerror());
-		throw std::runtime_error("failed to load output constructor");
+		printf("Failed to load robot constructor: %s\n", dlerror());
+		throw std::runtime_error("failed to load robot constructor");
 	}
 
-	//Set up output destructor
-	*(void**)(&destroyOutput) = dlsym(outputLibrary, "destroyRobot");
+	//Set up robot destructor
+	*(void**)(&destroyInterface) = dlsym(robotLibrary, "destroyRobot");
 	symbolError = dlerror();
 	if(symbolError) {
-		printf("Failed to load output destructor: %s\n", dlerror());
-		throw std::runtime_error("failed to load output destructor");
+		printf("Failed to load robot destructor: %s\n", dlerror());
+		throw std::runtime_error("failed to load robot destructor");
 	}
 }
 
@@ -105,7 +105,7 @@ void Robot::loadOutputLibrary(const char *filename) {
 void Robot::run() {
 	//Check the watchdog timer
 	if(!watchdog.isAlive()) {
-		output->stop();
+		interface->stop();
 	}
 
 	//Display last received data and send a ping once every ~500ms
@@ -150,7 +150,7 @@ void Robot::run() {
 		for(unsigned int i = 0; i < buttonsSize; i++) {
 			buttons[i] = in["buttons"].get(i, false).asBool();
 		}
-		output->control(axesSize, axes, buttonsSize, buttons);
+		interface->control(axesSize, axes, buttonsSize, buttons);
 	}
 }
 

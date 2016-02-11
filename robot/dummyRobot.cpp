@@ -17,13 +17,13 @@ DummyRobot::~DummyRobot() {
 }
 
 //Shared library constructor
-extern "C" Output* createRobot(const char *options) {
+extern "C" RobotInterface* createRobot(const char *options) {
 	return new DummyRobot();
 }
 
 //Shared library destructor
-extern "C" void destroyRobot(Output *output) {
-	delete output;
+extern "C" void destroyRobot(RobotInterface *interface) {
+	delete interface;
 }
 
 //Functions

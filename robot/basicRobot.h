@@ -2,11 +2,11 @@
 #define BASICROBOT_H
 
 //Includes
-#include "output/output.h"
+#include "robot/robotInterface.h"
 #include "output/motor.h"
 
 //Declaration
-class BasicRobot : public Output {
+class BasicRobot : public RobotInterface {
 public:
 	//Constructor
 	BasicRobot();

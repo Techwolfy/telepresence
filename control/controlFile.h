@@ -3,10 +3,10 @@
 
 //Includes
 #include <jsoncpp/json/json.h>
-#include "input/input.h"
+#include "control/controller.h"
 
 //Declaration
-class ControlFile : public Input {
+class ControlFile : public Controller {
 public:
 	//Constructor
 	ControlFile();

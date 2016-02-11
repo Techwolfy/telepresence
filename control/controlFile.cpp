@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdexcept>
-#include "input/controlFile.h"
+#include "control/controlFile.h"
 
 //Constructor
 ControlFile::ControlFile() : ControlFile("pipe") {

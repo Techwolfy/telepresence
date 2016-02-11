@@ -2,11 +2,11 @@
 #define REDROBOT_H
 
 //Includes
-#include "output/output.h"
+#include "robot/robotInterface.h"
 #include "output/motor.h"
 
 //Declaration
-class RedRobot : public Output {
+class RedRobot : public RobotInterface {
 public:
 	//Constructor
 	RedRobot();

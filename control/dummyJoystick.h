@@ -2,11 +2,11 @@
 #define DUMMYJOYSTICK_H
 
 //Includes
-#include "input/input.h"
+#include "control/controller.h"
 #include "util/watchdog.h"
 
 //Declaration
-class DummyJoystick : public Input {
+class DummyJoystick : public Controller {
 public:
 	//Constructor
 	DummyJoystick();

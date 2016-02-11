@@ -9,10 +9,10 @@
 #include "client.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
-#include "input/input.h"
-#include "input/dummyJoystick.h"
-#include "input/joystick.h"
-#include "input/controlFile.h"
+#include "control/controller.h"
+#include "control/dummyJoystick.h"
+#include "control/joystick.h"
+#include "control/controlFile.h"
 
 //Constructor
 Client::Client() : Client("127.0.0.1", "8353", false) {
@@ -22,7 +22,7 @@ Client::Client() : Client("127.0.0.1", "8353", false) {
 Client::Client(const char *address, const char *port, bool listen, bool dummy /* = false */) : Server(address, port, listen) {
 	//Set up dummy joystick if necessary
 	if(dummy) {
-		input = new DummyJoystick();
+		controller = new DummyJoystick();
 	}
 
 	//Set up output packet
@@ -45,17 +45,17 @@ Client::Client(const char *address, const char *port, bool listen, bool dummy /*
 
 Client::Client(const char *address, const char *port, bool listen, int joyNum) : Client(address, port, listen) {
 	//Set up joystick
-	input = new Joystick(joyNum);
+	controller = new Joystick(joyNum);
 }
 
 Client::Client(const char *address, const char *port, bool listen, char *file) : Client(address, port, listen) {
 	//Set up web client pipe
-	input = new ControlFile(file);
+	controller = new ControlFile(file);
 }
 
 //Destructor
 Client::~Client() {
-	delete input;
+	delete controller;
 }
 
 //Functions
@@ -79,13 +79,13 @@ void Client::run() {
 	}
 
 	//Prepare joystick data for robot
-	input->update();
+	controller->update();
 	out["frameNum"] = out.get("frameNum", 0).asUInt() + 1;
-	for(int i = 0; i < input->getNumAxes(); i++) {
-		out["axes"][i] = input->getAxis(i);
+	for(int i = 0; i < controller->getNumAxes(); i++) {
+		out["axes"][i] = controller->getAxis(i);
 	}
-	for(int i = 0; i < input->getNumButtons(); i++) {
-		out["buttons"][i] = input->getButton(i);
+	for(int i = 0; i < controller->getNumButtons(); i++) {
+		out["buttons"][i] = controller->getButton(i);
 	}
 	out["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 

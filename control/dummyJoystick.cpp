@@ -3,7 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <stdlib.h>
-#include "dummyJoystick.h"
+#include "control/dummyJoystick.h"
 #include "util/watchdog.h"
 
 //Constants

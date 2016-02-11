@@ -171,8 +171,8 @@ void help() {
 	printf("-d\t\tUse dummy inputs / outputs.\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");
-	printf("-o [file]\tSpecify a shared library file for outputs (robot only).\n");
-	printf("-x [string]\tSpecify additional arguments for the output library (robot only).\n");
+	printf("-o [file]\tSpecify a shared library file for robot logic and I/O (robot only).\n");
+	printf("-x [string]\tSpecify additional arguments for the robot library (robot only).\n");
 }
 
 //Catch SIGINT and shut down properly
