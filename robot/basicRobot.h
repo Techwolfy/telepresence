@@ -10,7 +10,6 @@ class BasicRobot : public RobotInterface {
 public:
 	//Constructor
 	BasicRobot();
-
 	BasicRobot(const char *deviceFile);
 
 	//Destructor

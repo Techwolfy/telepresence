@@ -10,7 +10,6 @@ class RedRobot : public RobotInterface {
 public:
 	//Constructor
 	RedRobot();
-
 	RedRobot(const char *pololuFile);
 
 	//Destructor
