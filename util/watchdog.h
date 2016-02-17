@@ -15,6 +15,7 @@ public:
 	~Watchdog();
 
 	//Functions
+	unsigned long getTimeout();
 	void setTimeout(unsigned long timeout);
 	void feed();
 	void reset();

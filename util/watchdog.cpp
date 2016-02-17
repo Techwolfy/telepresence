@@ -26,6 +26,11 @@ Watchdog::~Watchdog() {
 }
 
 //Functions
+//Get watchdog timeout
+unsigned long Watchdog::getTimeout() {
+	return interval;
+}
+
 //Set watchdog timeout
 void Watchdog::setTimeout(unsigned long timeout) {
 	interval = timeout;

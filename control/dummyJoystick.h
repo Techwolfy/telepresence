@@ -3,7 +3,7 @@
 
 //Includes
 #include "control/controller.h"
-#include "util/watchdog.h"
+#include "util/ratelimit.h"
 
 //Declaration
 class DummyJoystick : public Controller {
@@ -32,7 +32,8 @@ private:
 	const static int DUMMY_JOY_BUTTONS;
 	const static double DUMMY_JOY_AXIS_VALUE;
 	const static bool DUMMY_JOY_BUTTON_VALUE;
-	Watchdog ratelimit;
+	Ratelimit messages;
+	int updateRateID;
 };
 
 #endif //DUMMYJOYSTICK_H

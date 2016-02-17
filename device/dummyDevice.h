@@ -3,7 +3,7 @@
 
 //Includes
 #include "device/device.h"
-#include "util/watchdog.h"
+#include "util/ratelimit.h"
 
 //Declaration
 class DummyDevice : public Device {
@@ -38,14 +38,16 @@ private:
 	const static int DUMMY_DEVICE_NUM_IO = 10;
 
 	//Variables
-	Watchdog ratelimitAI;
-	Watchdog ratelimitDI;
-	Watchdog ratelimitEC;
-	Watchdog ratelimitER;
-	Watchdog ratelimitDS;
-	Watchdog ratelimitDC;
-	Watchdog ratelimitMP;
-	Watchdog ratelimitMS;
+	Ratelimit messages;
+	Ratelimit values;
+	int gaiRateID, gaiValueRateID;
+	int gdiRateID, gdiValueRateID;
+	int gecRateID, gecValueRateID;
+	int gerRateID, gerValueRateID;
+	int sdoRateID, sdoValueRateID;
+	int cdoRateID;
+	int smpRateID, smpValueRateID;
+	int smRateID;
 };
 
 #endif //DUMMYDEVICE_H

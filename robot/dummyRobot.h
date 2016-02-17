@@ -3,7 +3,7 @@
 
 //Includes
 #include "robot/robotInterface.h"
-#include "util/watchdog.h"
+#include "util/ratelimit.h"
 
 //Declaration
 class DummyRobot : public RobotInterface {
@@ -20,8 +20,9 @@ public:
 
 private:
 	//Variables
-	Watchdog ratelimitRun;
-	Watchdog ratelimitStop;
+	Ratelimit messages;
+	int runRateID;
+	int stopRateID;
 };
 
 #endif //DUMMYROBOT_H

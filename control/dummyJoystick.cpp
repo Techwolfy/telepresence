@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "control/dummyJoystick.h"
-#include "util/watchdog.h"
+#include "util/ratelimit.h"
 
 //Constants
 const int DummyJoystick::JOY_X_AXIS = 0;
@@ -16,7 +16,9 @@ const double DummyJoystick::DUMMY_JOY_AXIS_VALUE = 0.5;
 const bool DummyJoystick::DUMMY_JOY_BUTTON_VALUE = true;
 
 //Constructor
-DummyJoystick::DummyJoystick() : ratelimit(500) {
+DummyJoystick::DummyJoystick() : messages(500, 1) {
+	updateRateID = messages.getID();
+
 	printf("Dummy joystick created.\n");
 }
 
@@ -28,9 +30,9 @@ DummyJoystick::~DummyJoystick() {
 //Functions
 //"Update" the static dummy joystick values
 void DummyJoystick::update() {
-	if(ratelimit.expired()) {
+	if(messages.limitReached(updateRateID)) {
 		printf("Dummy joystick updated!\n");
-		ratelimit.reset();
+		messages.increment(updateRateID);
 	}
 }
 

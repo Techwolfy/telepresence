@@ -3,17 +3,26 @@
 //Includes
 #include <stdio.h>
 #include "device/dummyDevice.h"
-#include "util/watchdog.h"
+#include "util/ratelimit.h"
 
 //Constructor
-DummyDevice::DummyDevice() : ratelimitAI(500),
-							 ratelimitDI(500),
-							 ratelimitEC(500),
-							 ratelimitER(500),
-							 ratelimitDS(500),
-							 ratelimitDC(500),
-							 ratelimitMP(500),
-							 ratelimitMS(500) {
+DummyDevice::DummyDevice() : messages(500, 1),
+							 values(500, DUMMY_DEVICE_NUM_IO) {
+	gaiRateID = messages.getID();
+	gdiRateID = messages.getID();
+	gecRateID = messages.getID();
+	gerRateID = messages.getID();
+	sdoRateID = messages.getID();
+	cdoRateID = messages.getID();
+	smpRateID = messages.getID();
+	smRateID = messages.getID();
+	gaiValueRateID = values.getID();
+	gdiValueRateID = values.getID();
+	gecValueRateID = values.getID();
+	gerValueRateID = values.getID();
+	sdoValueRateID = values.getID();
+	smpValueRateID = values.getID();
+
 	printf("Dummy motor created.\n");
 }
 
@@ -30,10 +39,13 @@ double DummyDevice::getAnalogInput(int analogNum) {
 		return 0.0;
 	}
 
-	if(ratelimitAI.expired()) {
+	if(!messages.limitReached(gaiRateID)) {
 		printf("Dummy device getAnalogInput() called.\n");
+		messages.increment(gaiRateID);
+	}
+	if(!values.limitReached(gaiValueRateID)) {
 		printf("Analog Input %d: %f\n", analogNum, 0.5);
-		ratelimitAI.reset();
+		values.increment(gaiValueRateID);
 	}
 	return 0.5;
 }
@@ -45,10 +57,13 @@ bool DummyDevice::getDigitalInput(int digitalNum) {
 		return false;
 	}
 
-	if(ratelimitDI.expired()) {
+	if(!messages.limitReached(gdiRateID)) {
 		printf("Dummy device getDigitalInput() called.\n");
+		messages.increment(gdiRateID);
+	}
+	if(!values.limitReached(gdiValueRateID)) {
 		printf("Digital Input %d: %c\n", digitalNum, 'T');
-		ratelimitDI.reset();
+		values.increment(gdiValueRateID);
 	}
 	return true;
 }
@@ -60,10 +75,14 @@ int DummyDevice::getEncoderCount(int encoderNum) {
 		return 0;
 	}
 
-	if(ratelimitEC.expired()) {
+	if(!messages.limitReached(gecRateID)) {
 		printf("Dummy device getEncoderCount() called.\n");
+		messages.increment(gecRateID);
+		
+	}
+	if(!values.limitReached(gecValueRateID)) {
 		printf("Encoder %d Count: %d\n", encoderNum, 100);
-		ratelimitEC.reset();
+		values.increment(gecValueRateID);
 	}
 	return 100;
 }
@@ -75,10 +94,14 @@ double DummyDevice::getEncoderRate(int encoderNum) {
 		return 0.0;
 	}
 
-	if(ratelimitER.expired()) {
+	if(!messages.limitReached(gerRateID)) {
 		printf("Dummy device getEncoderRate() called.\n");
-		printf("Encoder %d Rate: %f\n", encoderNum, 5.0);
-		ratelimitER.reset();
+		messages.increment(gerRateID);
+		
+	}
+	if(!values.limitReached(gerValueRateID)) {
+		printf("Encoder %d RateID: %f\n", encoderNum, 5.0);
+		values.increment(gerValueRateID);
 	}
 	return 5.0;
 }
@@ -90,18 +113,22 @@ void DummyDevice::setDigitalOutput(int outputNum, bool state) {
 		return;
 	}
 
-	if(ratelimitDS.expired()) {
+	if(!messages.limitReached(sdoRateID)) {
 		printf("Dummy device setDigitalOutput() called.\n");
+		messages.increment(sdoRateID);
+		
+	}
+	if(!values.limitReached(sdoValueRateID)) {
 		printf("Digital Output %d: %c\n", outputNum, state ? 'T' : 'F');
-		ratelimitDS.reset();
+		values.increment(sdoValueRateID);
 	}
 }
 
 //Dummy digital output; output clear message to console
 void DummyDevice::clearDigitalOutputs() {
-	if(ratelimitDC.expired()) {
+	if(!messages.limitReached(cdoRateID)) {
 		printf("Dummy device clearDigitalOutputs() called.\n");
-		ratelimitDC.reset();
+		messages.increment(cdoRateID);
 	}
 }
 
@@ -112,17 +139,21 @@ void DummyDevice::setMotorPower(int motorNum, double power) {
 		return;
 	}
 
-	if(ratelimitMP.expired()) {
+	if(!messages.limitReached(smpRateID)) {
 		printf("Dummy device setMotorPower() called.\n");
+		messages.increment(smpRateID);
+		
+	}
+	if(!values.limitReached(smpValueRateID)) {
 		printf("Motor %d: %f\n", motorNum, power);
-		ratelimitMP.reset();
+		values.increment(smpValueRateID);
 	}
 }
 
 //Dummy motor; output stop message to console
 void DummyDevice::stopMotors() {
-	if(ratelimitMS.expired()) {
+	if(!messages.limitReached(smRateID)) {
 		printf("Dummy device stopMotors() called.\n");
-		ratelimitMS.reset();
+		messages.increment(smRateID);
 	}
 }
