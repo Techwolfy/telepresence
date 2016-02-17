@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdexcept>
-#include "output/pololu.h"
+#include "device/pololu.h"
 
 //Constructor
 Pololu::Pololu() : Pololu("/dev/ttyACM0") {
@@ -53,28 +53,26 @@ Pololu::Pololu(const char *file) {
 	printf("Pololu Maestro servo controller initialized!\n");
 
 	//Make sure all motors are stopped
-	stop();
+	stopMotors();
 }
 
 //Destructor
 Pololu::~Pololu() {
-	stop();
+	stopMotors();
 	close(pololuFD);
 }
 
 //Functions
-//Set power of all motors
+//Set power of a specific motor
 //NB: Supports up to 24-port Pololu Maestro servo controllers; however, smaller controllers will ignore commands for ports they don't have.
-void Pololu::control(int numValues, double values[]) {
-	for(int i = 0; i < numValues && i < 24; i++) {
-		setPower(i, scalePower(values[i]));
-	}
+void Pololu::setMotorPower(unsigned char channel, double power) {
+	setPower(channel, scalePower(power));
 }
 
 //Stop all motors
-void Pololu::stop() {
-	for(int i = 0; i < 24; i++) {
-		setPower(i, scalePower(0));
+void Pololu::stopMotors() {
+	for(int i = 0; i < POLOLU_NUM_MOTORS; i++) {
+		setPower(i, scalePower(0.0));
 	}
 }
 
@@ -92,7 +90,7 @@ unsigned short Pololu::scalePower(double power) {
 
 //Get power of a specific channel
 unsigned short Pololu::getPower(unsigned char channel) {
-	if(channel > 24) {
+	if(channel > POLOLU_NUM_MOTORS) {
 		printf("Invalid PWM channel!\n");
 		return 0;
 	}
@@ -114,7 +112,7 @@ unsigned short Pololu::getPower(unsigned char channel) {
 
 //Set power of a specific channel
 void Pololu::setPower(unsigned char channel, unsigned short power) {
-	if(channel > 24) {
+	if(channel > POLOLU_NUM_MOTORS) {
 		printf("Invalid PWM channel!\n");
 		return;
 	}

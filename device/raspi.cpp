@@ -3,7 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <stdexcept>
-#include "output/raspi.h"
+#include "device/raspi.h"
 #include "lib/wiringPi/static/include/wiringPi.h"
 #include "lib/wiringPi/static/include/softPwm.h"
 
@@ -23,27 +23,30 @@ RasPi::RasPi() {
 	}
 
 	//Make sure all motors are stopped
-	stop();
+	stopMotors();
 }
 
 //Destructor
 RasPi::~RasPi() {
-	stop();
+	stopMotors();
 }
 
 //Functions
-//Set power of all motors
-void RasPi::control(int numValues, double values[]) {
-	for(int i = 0; i < numValues && i < 10; i++) {
-		//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
-		softPwmWrite(i, scalePower(values[i]));	//TODO: Test, output range may be wrong
+//Set power of a specific motor
+void RasPi::setMotorPower(int motorNum, double power) {
+	if(motorNum < 0 || motorNum > RASPI_NUM_MOTORS) {
+		printf("Invalid motor GPIO pin!\n");
+		return;
 	}
+
+	//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
+	softPwmWrite(motorNum, scalePower(power));	//TODO: Test, output range may be wrong
 }
 
 //Stop all motors
-void RasPi::stop() {
-	for(int i = 0; i < 10; i++) {
-		softPwmWrite(i, 15);
+void RasPi::stopMotors() {
+	for(int i = 0; i < RASPI_NUM_MOTORS; i++) {
+		softPwmWrite(i, scalePower(0.0));
 	}
 }
 

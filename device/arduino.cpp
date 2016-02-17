@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdexcept>
-#include "output/arduino.h"
+#include "device/arduino.h"
 
 //Constructor
 Arduino::Arduino() : Arduino("/dev/ttyACM0") {
@@ -53,41 +53,21 @@ Arduino::Arduino(const char *file) {
 	printf("Arduino initialized!\n");
 
 	//Make sure all motors are stopped
-	stop();
+	stopMotors();
 }
 
 //Destructor
 Arduino::~Arduino() {
-	stop();
+	stopMotors();
 	close(arduinoFD);
 }
 
 //Functions
 //NB: Ports and values outside the range of the connected Arduino's capabilities will be ignored
-//Set power of all motors
-void Arduino::control(int numValues, double values[]) {
-	for(int i = 0; i < numValues && i < 6; i++) {
-		setPower(i, scalePower(values[i]));
-	}
-}
-
-//Stop all motors
-void Arduino::stop() {
-	for(int i = 0; i < 6; i++) {
-		setPower(i, scalePower(0));
-	}
-}
-
-//Set digital output values
-void Arduino::setDigitalOutputs(int numValues, bool values[]) {
-	for(int i = 0; i < numValues && i < 6; i++) {
-		setDigitalOutput(i, values[i]);
-	}
-}
-
 //Retrieve the value of an analog input channel
-float Arduino::getAnalogInput(unsigned char channel) {
-	if(channel > 6) {
+double Arduino::getAnalogInput(unsigned char channel) {
+	if(channel > TELEDUINO_NUM_ANALOG_INPUTS) {
+		printf("Invalid analog input channel!\n");
 		return 0.0;
 	}
 
@@ -103,13 +83,14 @@ float Arduino::getAnalogInput(unsigned char channel) {
 		printf("Error reading from Arduino!\n");
 	}
 
-	return data;
+	return data;	//Float is promoted to double
 }
 
 //Retieve the count of a rotary encoder connected to the specified channel
 //NB: Speeds faster than the Arduino's capability to measure may be inaccurate
-long Arduino::getEncoderCount(unsigned char channel) {
-	if(channel > 4) {
+int Arduino::getEncoderCount(unsigned char channel) {
+	if(channel > TELEDUINO_NUM_ENCODERS) {
+		printf("Invalid encoder channel!\n");
 		return 0;
 	}
 
@@ -129,8 +110,9 @@ long Arduino::getEncoderCount(unsigned char channel) {
 
 //Retieve the speed of a rotary encoder connected to the specified channel (counts/sec)
 //NB: Speeds faster than the Arduino's capability to measure may be inaccurate
-float Arduino::getEncoderSpeed(unsigned char channel) {
-	if(channel > 4) {
+double Arduino::getEncoderSpeed(unsigned char channel) {
+	if(channel > TELEDUINO_NUM_ENCODERS) {
+		printf("Invalid encoder channel!\n");
 		return 0.0;
 	}
 
@@ -148,6 +130,38 @@ float Arduino::getEncoderSpeed(unsigned char channel) {
 	return data;
 }
 
+//Set state of a specific digital I/O port
+void Arduino::setDigitalOutput(unsigned char channel, bool state) {
+	if(channel > TELEDUINO_NUM_DIGITAL_OUTPUTS) {
+		printf("Invalid digital output channel!\n");
+		return;
+	}
+
+	unsigned char command[4] = {'D', channel, state, '\0'};
+	//Command byte, channel byte, state byte, null byte
+	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+		printf("Error writing to Arduino!\n");
+	}
+}
+
+//Clear all digital I/O ports
+void Arduino::clearDigitalOutputs() {
+	for(unsigned char i = 0; i < TELEDUINO_NUM_DIGITAL_OUTPUTS; i++) {
+		setDigitalOutput(i, false);
+	}
+}
+
+//Set power of a specific motor
+void Arduino::setMotorPower(unsigned char channel, double power) {
+	setPower(channel, scalePower(power));
+}
+
+//Stop all motors
+void Arduino::stopMotors() {
+	for(int i = 0; i < TELEDUINO_NUM_MOTORS; i++) {
+		setPower(i, scalePower(0.0));
+	}
+}
 
 //Scale power from (-1.0, 1.0) to Arduino range of (1000, 2000)
 unsigned short Arduino::scalePower(double power) {
@@ -161,29 +175,14 @@ unsigned short Arduino::scalePower(double power) {
 	return (power * 500) + 1500;
 }
 
-//Set power of a specific channel
+//Set power of a specific motor channel
 void Arduino::setPower(unsigned char channel, unsigned short power) {
-	if(channel > 6) {
-		printf("Invalid PWM channel!\n");
-		return;
+	if(channel > TELEDUINO_NUM_MOTORS) {
+		printf("Invalid motor channel!\n");
 	}
 
 	unsigned char command[4] = {'P', channel, (unsigned char)(power & 0xFF), (unsigned char)((power >> 8) & 0xFF)};
 	//Command byte, channel byte, target low byte, target high byte
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
-	}
-}
-
-//Set state of a specific digital I/O port
-void Arduino::setDigitalOutput(unsigned char channel, bool high) {
-	if(channel > 4) {
-		printf("Invalid Digital I/O channel!\n");
-		return;
-	}
-
-	unsigned char command[4] = {'D', channel, high, '\0'};
-	//Command byte, channel byte, state byte, null byte
 	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}

@@ -11,7 +11,7 @@ public:
 	virtual ~RobotInterface() = default;
 
 	//Functions
-	virtual void control(int numAxes, double axes[], int numButtons, bool buttons[]) = 0;
+	virtual void run(int numAxes, double axes[], int numButtons, bool buttons[]) = 0;
 	virtual void stop() = 0;
 };
 

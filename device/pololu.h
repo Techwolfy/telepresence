@@ -3,10 +3,10 @@
 
 //Includes
 #include <termios.h>
-#include "output/motor.h"
+#include "device/device.h"
 
 //Declaration
-class Pololu : public Motor {
+class Pololu : public Device {
 public:
 	//Constructor
 	Pololu();
@@ -16,10 +16,14 @@ public:
 	~Pololu();
 
 	//Functions
-	void control(int numValues, double values[]);
-	void stop();
+	inline int getNumMotors() {return POLOLU_NUM_MOTORS;}
+	void setMotorPower(unsigned char channel, double power);
+	void stopMotors();
 
 private:
+	//Constants
+	const static int POLOLU_NUM_MOTORS = 24;
+
 	//Variables
 	int pololuFD;
 	struct termios tty;

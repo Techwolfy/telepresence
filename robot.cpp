@@ -150,7 +150,7 @@ void Robot::run() {
 		for(unsigned int i = 0; i < buttonsSize; i++) {
 			buttons[i] = in["buttons"].get(i, false).asBool();
 		}
-		interface->control(axesSize, axes, buttonsSize, buttons);
+		interface->run(axesSize, axes, buttonsSize, buttons);
 	}
 }
 

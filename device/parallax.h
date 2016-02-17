@@ -3,10 +3,10 @@
 
 //Includes
 #include <termios.h>
-#include "output/motor.h"
+#include "device/device.h"
 
 //Declaration
-class Parallax : public Motor {
+class Parallax : public Device {
 public:
 	//Constructor
 	Parallax();
@@ -16,10 +16,14 @@ public:
 	~Parallax();
 
 	//Functions
-	void control(int numValues, double values[]);
-	void stop();
+	inline int getNumMotors() {return PARALLAX_NUM_MOTORS;}
+	void setMotorPower(unsigned char channel, double power);
+	void stopMotors();
 
 private:
+	//Constants
+	const static int PARALLAX_NUM_MOTORS = 16;
+
 	//Variables
 	int parallaxFD;
 	struct termios tty;
@@ -28,8 +32,8 @@ private:
 	void setBaudRate(bool increase);
 	double getVersion();
 	unsigned short scalePower(double power);
-	unsigned short getPower(unsigned char servoNum);
-	void setPower(unsigned char servoNum, unsigned short power);
+	unsigned short getPower(unsigned char channel);
+	void setPower(unsigned char channel, unsigned short power);
 };
 
 #endif //PARALLAX_H

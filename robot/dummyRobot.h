@@ -15,12 +15,12 @@ public:
 	~DummyRobot();
 
 	//Functions
-	void control(int numAxes, double axes[], int numButtons, bool buttons[]);
+	void run(int numAxes, double axes[], int numButtons, bool buttons[]);
 	void stop();
 
 private:
 	//Variables
-	Watchdog ratelimitControl;
+	Watchdog ratelimitRun;
 	Watchdog ratelimitStop;
 };
 

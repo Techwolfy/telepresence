@@ -3,54 +3,54 @@
 //Includes
 #include <stdio.h>
 #include "robot/basicRobot.h"
-#include "output/motor.h"
+#include "device/device.h"
 #ifdef POLOLU
-	#include "output/pololu.h"
+	#include "device/pololu.h"
 #elif RASPI
-	#include "output/raspi.h"
+	#include "device/raspi.h"
 #elif PARALLAX
-	#include "output/parallax.h"
+	#include "device/parallax.h"
 #elif ARDUINO
-	#include "output/arduino.h"
+	#include "device/arduino.h"
 #else
-	#include "output/dummyMotor.h"
+	#include "device/dummyDevice.h"
 #endif
 
 //Constructors
 BasicRobot::BasicRobot() {
-	//Set up motor
+	//Set up output device
 	#ifdef POLOLU
-		motor = new Pololu();
+		device = new Pololu();
 	#elif RASPI
-		motor = new RasPi();
+		device = new RasPi();
 	#elif PARALLAX
-		motor = new Parallax();
+		device = new Parallax();
 	#elif ARDUINO
-		motor = new Arduino();
+		device = new Arduino();
 	#else
-		motor = new DummyMotor();
+		device = new DummyDevice();
 	#endif
 }
 
 BasicRobot::BasicRobot(const char *deviceFile) {
 	printf("Output device file: %s\n", deviceFile);
-	//Set up motor
+	//Set up output device at specified filesystem location
 	#ifdef POLOLU
-		motor = new Pololu(deviceFile);
+		device = new Pololu(deviceFile);
 	#elif RASPI
-		motor = new RasPi();
+		device = new RasPi();
 	#elif PARALLAX
-		motor = new Parallax(deviceFile);
+		device = new Parallax(deviceFile);
 	#elif ARDUINO
-		motor = new Arduino(deviceFile);
+		device = new Arduino(deviceFile);
 	#else
-		motor = new DummyMotor();
+		device = new DummyDevice();
 	#endif
 }
 
 //Destructor
 BasicRobot::~BasicRobot() {
-	delete motor;
+	delete device;
 }
 
 //Shared library constructor
@@ -69,12 +69,15 @@ extern "C" void destroyRobot(RobotInterface *interface) {
 
 //Functions
 //Run motors
-void BasicRobot::control(int numValues, double values[], int numButtons, bool buttons[]) {
-	motor->control(numValues, values);
+void BasicRobot::run(int numValues, double values[], int numButtons, bool buttons[]) {
+	for(int i = 0; i < numValues; i++) {
+		device->setMotorPower(i, values[i]);
+	}
+
 	//Buttons are currently ignored
 }
 
 //Stop motors
 void BasicRobot::stop() {
-	motor->stop();
+	device->stopMotors();
 }

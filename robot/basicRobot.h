@@ -3,7 +3,7 @@
 
 //Includes
 #include "robot/robotInterface.h"
-#include "output/motor.h"
+#include "device/device.h"
 
 //Declaration
 class BasicRobot : public RobotInterface {
@@ -16,11 +16,11 @@ public:
 	~BasicRobot();
 
 	//Functions
-	void control(int numAxes, double axes[], int numButtons, bool buttons[]);
+	void run(int numAxes, double axes[], int numButtons, bool buttons[]);
 	void stop();
 
 private:
-	Motor *motor;
+	Device *device;
 };
 
 #endif //BASICROBOT_H

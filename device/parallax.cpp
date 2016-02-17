@@ -9,7 +9,7 @@
 #include <termios.h>
 #include <stdexcept>
 #include <sys/select.h>
-#include "output/parallax.h"
+#include "device/parallax.h"
 
 //Constructor
 Parallax::Parallax() : Parallax("/dev/ttyUSB0") {
@@ -68,12 +68,12 @@ Parallax::Parallax(const char *file) : parallaxFD(-1),
 	printf("Parallax initialized! Firmware Version: %.1f\n", getVersion());
 
 	//Make sure all motors are stopped
-	stop();
+	stopMotors();
 }
 
 //Destructor
 Parallax::~Parallax() {
-	stop();
+	stopMotors();
 	close(parallaxFD);
 }
 
@@ -131,16 +131,14 @@ void Parallax::setBaudRate(bool increase) {
 	}
 }
 
-//Set power of all motors
-void Parallax::control(int numValues, double values[]) {
-	for(int i = 0; i < numValues && i < 16; i++) {
-		setPower(i, scalePower(values[i]));
-	}
+//Set power of a specific motor
+void Parallax::setMotorPower(unsigned char channel, double power) {
+	setPower(channel, scalePower(power));
 }
 
 //Stop all motors
-void Parallax::stop() {
-	for(int i = 0; i < 16; i++) {
+void Parallax::stopMotors() {
+	for(int i = 0; i < PARALLAX_NUM_MOTORS; i++) {
 		setPower(i, scalePower(0.0));
 	}
 }
@@ -176,7 +174,7 @@ unsigned short Parallax::scalePower(double power) {
 
 //Get power of a specific channel
 unsigned short Parallax::getPower(unsigned char channel) {
-	if(channel > 16) {
+	if(channel > PARALLAX_NUM_MOTORS) {
 		printf("Invalid PWM channel!\n");
 		return 0;
 	}
@@ -198,7 +196,7 @@ unsigned short Parallax::getPower(unsigned char channel) {
 
 //Set power of a specific channel
 void Parallax::setPower(unsigned char channel, unsigned short power) {
-	if(channel > 16) {
+	if(channel > PARALLAX_NUM_MOTORS) {
 		printf("Invalid PWM channel!\n");
 		return;
 	}
