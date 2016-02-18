@@ -35,7 +35,7 @@ public:
 
 private:
 	//Constants
-	const static int DUMMY_DEVICE_NUM_IO = 10;
+	static const int DUMMY_DEVICE_NUM_IO = 10;
 
 	//Variables
 	Ratelimit messages;

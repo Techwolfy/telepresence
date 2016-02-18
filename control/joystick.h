@@ -23,9 +23,9 @@ public:
 	bool getButton(int button);
 
 	//Variables
-	const static int JOY_X_AXIS;
-	const static int JOY_Y_AXIS;
-	const static int JOY_Z_AXIS;
+	static const int JOY_X_AXIS;
+	static const int JOY_Y_AXIS;
+	static const int JOY_Z_AXIS;
 
 private:
 	//Variables

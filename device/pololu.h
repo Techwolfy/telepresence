@@ -22,7 +22,7 @@ public:
 
 private:
 	//Constants
-	const static int POLOLU_NUM_MOTORS = 24;
+	static const int POLOLU_NUM_MOTORS = 24;
 
 	//Variables
 	int pololuFD;

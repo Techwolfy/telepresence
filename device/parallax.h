@@ -22,7 +22,7 @@ public:
 
 private:
 	//Constants
-	const static int PARALLAX_NUM_MOTORS = 16;
+	static const int PARALLAX_NUM_MOTORS = 16;
 
 	//Variables
 	int parallaxFD;

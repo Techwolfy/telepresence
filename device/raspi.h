@@ -20,7 +20,7 @@ public:
 
 private:
 	//Constants
-	const static int RASPI_NUM_MOTORS = 10;
+	static const int RASPI_NUM_MOTORS = 10;
 
 	//Functions
 	double scalePower(double power);

@@ -34,10 +34,10 @@ public:
 
 private:
 	//Constants
-	const static int TELEDUINO_NUM_ANALOG_INPUTS = 6;
-	const static int TELEDUINO_NUM_ENCODERS = 2;
-	const static int TELEDUINO_NUM_DIGITAL_OUTPUTS = 3;
-	const static int TELEDUINO_NUM_MOTORS = 5;
+	static const int TELEDUINO_NUM_ANALOG_INPUTS = 6;
+	static const int TELEDUINO_NUM_ENCODERS = 2;
+	static const int TELEDUINO_NUM_DIGITAL_OUTPUTS = 3;
+	static const int TELEDUINO_NUM_MOTORS = 5;
 
 	//Variables
 	int arduinoFD;
