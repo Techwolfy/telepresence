@@ -11,9 +11,9 @@ class Client : public Server {
 public:
 	//Constructor
 	Client();
-	Client(const char *address, const char *port, bool listen, bool dummy = false);
-	Client(const char *address, const char *port, bool listen, int joyNum);
-	Client(const char *address, const char *port, bool listen, char *file);
+	Client(const char *address, const char *port, const char *key, bool listen, bool dummy = false);
+	Client(const char *address, const char *port, const char *key, bool listen, int joyNum);
+	Client(const char *address, const char *port, const char *key, bool listen, char *file);
 
 	//Destructor
 	~Client();

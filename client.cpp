@@ -15,11 +15,11 @@
 #include "control/controlFile.h"
 
 //Constructor
-Client::Client() : Client("127.0.0.1", "8353", false) {
+Client::Client() : Client("127.0.0.1", "8353", "", false) {
 
 }
 
-Client::Client(const char *address, const char *port, bool listen, bool dummy /* = false */) : Server(address, port, listen) {
+Client::Client(const char *address, const char *port, const char *key, bool listen, bool dummy /* = false */) : Server(address, port, key, listen) {
 	//Set up dummy joystick if necessary
 	if(dummy) {
 		controller = new DummyJoystick();
@@ -30,6 +30,7 @@ Client::Client(const char *address, const char *port, bool listen, bool dummy /*
 	out["isClient"] = true;
 	out["isRobot"] = false;
 	out["ping"] = false;
+	out["key"] = key;
 	out["time"] = 0;
 
 	//Set up ping packet
@@ -37,18 +38,19 @@ Client::Client(const char *address, const char *port, bool listen, bool dummy /*
 	ping["isClient"] = true;
 	ping["isRobot"] = false;
 	ping["ping"] = true;
+	ping["key"] = key;
 	ping["time"] = 0;
 
 	//Send initialization ping
 	sendPing();
 }
 
-Client::Client(const char *address, const char *port, bool listen, int joyNum) : Client(address, port, listen) {
+Client::Client(const char *address, const char *port, const char *key, bool listen, int joyNum) : Client(address, port, key, listen) {
 	//Set up joystick
 	controller = new Joystick(joyNum);
 }
 
-Client::Client(const char *address, const char *port, bool listen, char *file) : Client(address, port, listen) {
+Client::Client(const char *address, const char *port, const char *key, bool listen, char *file) : Client(address, port, key, listen) {
 	//Set up web client pipe
 	controller = new ControlFile(file);
 }
@@ -73,7 +75,8 @@ void Client::run() {
 	buffer[0] = '\0';
 	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress) > 0 && buffer[0] != '\0') {
 		reader.parse(buffer, in, false);
-		if(in.get("ping", false).asBool()) {
+		//Only respond if key is valid
+		if(validateKey(in) && in.get("ping", false).asBool()) {
 			handlePing();
 		}
 	}

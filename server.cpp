@@ -2,6 +2,7 @@
 
 //Includes
 #include <stdio.h>
+#include <string.h>
 #include <chrono>
 #include <string>
 #include <stdexcept>
@@ -12,16 +13,17 @@
 #include "util/watchdog.h"
 
 //Constructor
-Server::Server() : Server("0.0.0.0", "8353", true) {
+Server::Server() : Server("0.0.0.0", "8353", "", true) {
 
 }
 
-Server::Server(const char *address, const char *port, bool listen /* = true */) : buffer{0},
-																				  unknownAddress{0},
-																				  clientAddress{0},
-																				  robotAddress{0},
-																				  listening(listen),
-																				  keepalive(500) {
+Server::Server(const char *address, const char *port, const char *key, bool listen /* = true */) : buffer{0},
+																								   unknownAddress{0},
+																								   clientAddress{0},
+																								   robotAddress{0},
+																								   password(key),
+																								   listening(listen),
+																								   keepalive(500) {
 	//Init socket
 	if(listen) {
 		s.openSocket(address, port, NULL, NULL);
@@ -48,12 +50,16 @@ Server::Server(const char *address, const char *port, bool listen /* = true */) 
 	out["isClient"] = false;
 	out["isRobot"] = false;
 	out["ping"] = false;
+	out["key"] = key;
+	out["time"] = 0;
 
 	//Set up ping response packet
 	ping["frameNum"] = 0;
 	ping["isClient"] = false;
 	ping["isRobot"] = false;
 	ping["ping"] = true;
+	ping["key"] = key;
+	ping["time"] = 0;
 }
 
 //Destructor
@@ -85,6 +91,10 @@ void Server::run() {
 		return;
 	} else {
 		reader.parse(buffer, in, false);
+		if(!validateKey(in)) {
+			//Ignore packets with invalid keys
+			return;
+		}
 	}
 	if(in.get("ping", false).asBool()) {
 		handlePing();
@@ -117,6 +127,11 @@ void Server::sendPing(struct sockaddr_in &remoteAddress) {
 		std::string pingJSON = writer.write(ping);
 		s.writeData(&remoteAddress, (void *)pingJSON.c_str(), pingJSON.length());
 	}
+}
+
+//Check if a given data packet's key is valid
+bool Server::validateKey(Json::Value &data) {
+	return (strcmp(password, in.get("key", "").asCString()) == 0);
 }
 
 //Print the contents of a data packet to the console

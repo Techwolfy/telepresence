@@ -12,7 +12,7 @@ class Server {
 public:
 	//Constructor
 	Server();
-	Server(const char *address, const char *port, bool listen = true);
+	Server(const char *address, const char *port, const char *key, bool listen = true);
 
 	//Destructor
 	virtual ~Server();
@@ -32,12 +32,14 @@ protected:
 	struct sockaddr_in unknownAddress;
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in robotAddress;
+	const char *password;
 	bool listening;
 	Watchdog keepalive;
 
 	//Functions
 	virtual void handlePing();
 	virtual void sendPing(struct sockaddr_in &remoteAddress);
+	virtual bool validateKey(Json::Value &data);
 	static void printData(Json::Value &data);
 	static void printLatency(Json::Value &data);
 };

@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
 	char port[6] = "8353";
+	char key[255] = "";
 	bool listen = false;
 	Server *telepresence = NULL;
 	bool dummy = false;
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvscrla:p:dj:f:o:x:")) != -1) {
+	while((c = getopt(argc, argv, "hvscrla:p:k:dj:f:o:x:")) != -1) {
 		switch(c) {
 			case 's':	//Server mode
 				isClient = false;
@@ -61,6 +62,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'p':	//Remote port
 				strcpy(port, optarg);
+				break;
+			case 'k':	//Connection key
+				strcpy(key, optarg);
 				break;
 			case 'd':	//Dummy I/O
 				dummy = true;
@@ -109,26 +113,26 @@ int main(int argc, char *argv[]) {
 	//Create main program object
 	try {
 		if(!isClient && !isRobot) {
-			telepresence = new Server(host, port);
+			telepresence = new Server(host, port, key);
 		} else if(isClient) {
 			if(dummy) {
-				telepresence = new Client(host, port, listen, dummy);
+				telepresence = new Client(host, port, key, listen, dummy);
 			} else if(clientJoystick >= 0) {
-				telepresence = new Client(host, port, listen, clientJoystick);
+				telepresence = new Client(host, port, key, listen, clientJoystick);
 			} else if(file[0] != 0) {
-				telepresence = new Client(host, port, listen, file);
+				telepresence = new Client(host, port, key, listen, file);
 			} else {
 				printf("Client input type not specified!\n");
 				throw std::runtime_error("missing client input type");
 			}
 		} else {
 			if(dummy) {
-				telepresence = new Robot(host, port, listen);
+				telepresence = new Robot(host, port, key, listen);
 			} else if(libFile[0] != 0) {
 				if(robotOptions[0] != 0) {
-					telepresence = new Robot(host, port, listen, libFile, robotOptions);
+					telepresence = new Robot(host, port, key, listen, libFile, robotOptions);
 				} else {
-					telepresence = new Robot(host, port, listen, libFile);
+					telepresence = new Robot(host, port, key, listen, libFile);
 				}
 			} else {
 				printf("Robot output type not specified!\n");
@@ -168,6 +172,7 @@ void help() {
 	printf("-l\t\tListening mode (client/robot only; default: off).\n");
 	printf("-a [address]\tLocal listening address / remote server address (default: 0.0.0.0 / 127.0.0.1).\n");
 	printf("-p [port]\tLocal listening port / remote server port (default: 8353).\n");
+	printf("-k [key]\tUse a plaintext key to restrict connections.\n");
 	printf("-d\t\tUse dummy inputs / outputs.\n");
 	printf("-j [joystick]\tSpecify an alternade joystick (client only; default: /dev/input/js0).\n");
 	printf("-f [file]\tSpecify a file or named pipe to read data from (client only).\n");

@@ -46,5 +46,4 @@ Pull requests welcome! Please try to keep the same code and commit message style
 * Add more modules for different types of input and output
 * Test non-dummy output modules
 * Add some method of bidirectional streaming for video and audio (e.g. via Youtube or Twitch)
-* Prevent multiple clients and/or robots from connecting to the same server simultaneously
 * Support Windows builds with MinGW

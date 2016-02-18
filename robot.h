@@ -11,9 +11,9 @@ class Robot : public Server {
 public:
 	//Constructor
 	Robot();
-	Robot(const char *address, const char *port, bool listen);
-	Robot(const char *address, const char *port, bool listen, const char *libFile);
-	Robot(const char *address, const char *port, bool listen, const char *libFile, const char *libOptions);
+	Robot(const char *address, const char *port, const char *key, bool listen);
+	Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile);
+	Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile, const char *libOptions);
 
 	//Destructor
 	~Robot();

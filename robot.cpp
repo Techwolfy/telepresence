@@ -14,26 +14,26 @@
 #include "robot/dummyRobot.h"
 
 //Constructor
-Robot::Robot() : Robot("127.0.0.1", "8353", NULL) {
+Robot::Robot() : Robot("127.0.0.1", "8353", "", NULL) {
 
 }
 
-Robot::Robot(const char *address, const char *port, bool listen) : Robot(address, port, listen, NULL, "") {
+Robot::Robot(const char *address, const char *port, const char *key, bool listen) : Robot(address, port, key, listen, NULL, "") {
 
 }
 
-Robot::Robot(const char *address, const char *port, bool listen, const char *libFile) : Robot(address, port, listen, libFile, NULL) {
+Robot::Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile) : Robot(address, port, key, listen, libFile, NULL) {
 
 }
 
-Robot::Robot(const char *address, const char *port, bool listen, const char *libFile, const char *libOptions) : Server(address, port, listen),
-																												watchdog(500, false),
-																												robotLibrary(NULL),
-																												interface(NULL),
-																												axesSize(0),
-																												buttonsSize(0),
-																												axes(NULL),
-																												buttons(NULL) {
+Robot::Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile, const char *libOptions) : Server(address, port, key, listen),
+																																 watchdog(500, false),
+																																 robotLibrary(NULL),
+																																 interface(NULL),
+																																 axesSize(0),
+																																 buttonsSize(0),
+																																 axes(NULL),
+																																 buttons(NULL) {
 	//Set up robot interface
 	if(libFile != NULL) {
 		loadRobotLibrary(libFile);
@@ -48,6 +48,7 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 	out["isClient"] = false;
 	out["isRobot"] = true;
 	out["ping"] = false;
+	out["key"] = key;
 	out["time"] = 0;
 
 	//Set up ping packet
@@ -55,6 +56,7 @@ Robot::Robot(const char *address, const char *port, bool listen, const char *lib
 	ping["isClient"] = false;
 	ping["isRobot"] = true;
 	ping["ping"] = true;
+	ping["key"] = key;
 	ping["time"] = 0;
 
 	//Send initialization ping
@@ -124,6 +126,10 @@ void Robot::run() {
 		return;
 	} else {
 		reader.parse(buffer, in, false);
+		if(!validateKey(in)) {
+			//Ignore packets with invalid keys
+			return;
+		}
 		watchdog.feed();
 	}
 
