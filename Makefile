@@ -4,8 +4,7 @@
 VPATH=$(wildcard */)
 CXX=g++
 AR=ar rsc
-CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -Wall -I.
-LFLAGS=
+CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I.
 SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
