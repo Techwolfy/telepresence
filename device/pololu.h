@@ -2,11 +2,11 @@
 #define POLOLU_H
 
 //Includes
-#include <termios.h>
 #include "device/device.h"
+#include "util/serial.h"
 
 //Declaration
-class Pololu : public Device {
+class Pololu : public Device, private Serial {
 public:
 	//Constructor
 	Pololu();
@@ -23,10 +23,6 @@ public:
 private:
 	//Constants
 	static const int POLOLU_NUM_MOTORS = 24;
-
-	//Variables
-	int pololuFD;
-	struct termios tty;
 
 	//Functions
 	unsigned short scalePower(double power);

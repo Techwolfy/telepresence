@@ -2,8 +2,6 @@
 
 //Includes
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <termios.h>
 #include <stdexcept>
 #include "device/pololu.h"
@@ -13,42 +11,10 @@ Pololu::Pololu() : Pololu("/dev/ttyACM0") {
 
 }
 
-Pololu::Pololu(const char *file) {
+Pololu::Pololu(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 	//Set up Pololu Maestro servo controller interface
-	pololuFD = open(file, O_RDWR | O_NOCTTY);
-	if(pololuFD < 0) {
-		printf("Pololu initialization failed!\n");
-		throw std::runtime_error("pololu initialization failed");
-	}
-
 	//Serial connection is 115200 8 N 1, full duplex
 		//https://www.pololu.com/docs/0J40/5.b
-
-	//Input/output flags
-	tty.c_iflag = 0;		//No input processing
-	tty.c_oflag = 0;		//No output processing
-	//Control flags
-	tty.c_cflag = CSIZE;	//Character size mask
-	tty.c_cflag |= CS8;		//8 data bits
-	tty.c_cflag &= ~PARENB;	//No parity
-	tty.c_cflag &= ~CSTOPB;	//1 stop bit
-	tty.c_cflag |= CREAD;	//Enable read
-	tty.c_cflag |= CLOCAL;	//Ignore control lines
-	//Local flags
-	tty.c_lflag = 0;		//No local processing: use non-canonical (raw) mode, disable echo, etc.
-	//Control characters
-	tty.c_cc[VMIN] = 2;		//Block on read until 2 chars have been read
-	tty.c_cc[VTIME] = 0;	//Read timeout not used
-
-	//Set intial baud rate
-	cfsetispeed(&tty, B115200);
-	cfsetospeed(&tty, B115200);
-
-	//Flush serial port and apply settings
-	if(tcsetattr(pololuFD, TCSAFLUSH, &tty) != 0) {
-		perror("Error applying Pololu Maestro serial port settings");
-		throw std::runtime_error("pololu initialization failed");
-	}
 
 	printf("Pololu Maestro servo controller initialized!\n");
 
@@ -59,7 +25,6 @@ Pololu::Pololu(const char *file) {
 //Destructor
 Pololu::~Pololu() {
 	stopMotors();
-	close(pololuFD);
 }
 
 //Functions
@@ -97,12 +62,12 @@ unsigned short Pololu::getPower(unsigned char channel) {
 
 	unsigned char command[2] = {0x90, channel};
 	//Command byte, channel byte
-	if(write(pololuFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Pololu Maestro servo controller!\n");
 	}
 
 	unsigned char data[2] = {0};
-	if(read(pololuFD, &data, sizeof(data)) == sizeof(data)) {
+	if(serialRead(&data, sizeof(data)) == sizeof(data)) {
 		return (data[0] << 8) | data[1];
 	} else {
 		printf("Error reading from Pololu Maestro servo controller!\n");
@@ -119,7 +84,7 @@ void Pololu::setPower(unsigned char channel, unsigned short power) {
 
 	unsigned char command[4] = {0x84, channel, (unsigned char)(power & 0x7F), (unsigned char)((power >> 7) & 0x7F)};
 	//Command byte, channel byte, target low 7 bits, target high 7 bits
-	if(write(pololuFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Pololu Maestro servo controller!\n");
 	}
 }

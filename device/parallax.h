@@ -2,11 +2,11 @@
 #define PARALLAX_H
 
 //Includes
-#include <termios.h>
 #include "device/device.h"
+#include "util/serial.h"
 
 //Declaration
-class Parallax : public Device {
+class Parallax : public Device, private Serial {
 public:
 	//Constructor
 	Parallax();
@@ -24,11 +24,8 @@ private:
 	//Constants
 	static const int PARALLAX_NUM_MOTORS = 16;
 
-	//Variables
-	int parallaxFD;
-	struct termios tty;
-
 	//Functions
+	using Serial::setBaudRate;
 	void setBaudRate(bool increase);
 	double getVersion();
 	unsigned short scalePower(double power);

@@ -8,7 +8,7 @@ CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -p
 SHARED=-fPIC -shared
 LIBS=-ldl -ljsoncpp
 RASPILIBS=-Llib/wiringPi/static/lib -lwiringPi
-OBJS=telepresence.o server.o client.o robot.o udpsocket.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
+OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o
 BUILDOBJS=$(addprefix build/, $(OBJS))
 BUILDROBOTS=$(addprefix build/, $(ROBOTS))

@@ -2,11 +2,11 @@
 #define ARDUINO_H
 
 //Includes
-#include <termios.h>
 #include "device/device.h"
+#include "util/serial.h"
 
 //Declaration
-class Arduino : public Device {
+class Arduino : public Device, private Serial {
 public:
 	//Constructor
 	Arduino();
@@ -38,10 +38,6 @@ private:
 	static const int TELEDUINO_NUM_ENCODERS = 2;
 	static const int TELEDUINO_NUM_DIGITAL_OUTPUTS = 3;
 	static const int TELEDUINO_NUM_MOTORS = 5;
-
-	//Variables
-	int arduinoFD;
-	struct termios tty;
 
 	//Functions
 	unsigned short scalePower(double power);

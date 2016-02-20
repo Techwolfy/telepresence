@@ -2,9 +2,6 @@
 
 //Includes
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termios.h>
 #include <stdexcept>
 #include "device/arduino.h"
 
@@ -13,42 +10,10 @@ Arduino::Arduino() : Arduino("/dev/ttyACM0") {
 
 }
 
-Arduino::Arduino(const char *file) {
+Arduino::Arduino(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 	//Set up Arduino serial interface
-	arduinoFD = open(file, O_RDWR | O_NOCTTY);
-	if(arduinoFD < 0) {
-		printf("Arduino initialization failed!\n");
-		throw std::runtime_error("arduino initialization failed");
-	}
-
 	//Serial connection is 115200 8 N 1, full duplex
 		//https://www.arduino.cc/en/Serial/Begin
-
-	//Input/output flags
-	tty.c_iflag = 0;		//No input processing
-	tty.c_oflag = 0;		//No output processing
-	//Control flags
-	tty.c_cflag = CSIZE;	//Character size mask
-	tty.c_cflag |= CS8;		//8 data bits
-	tty.c_cflag &= ~PARENB;	//No parity
-	tty.c_cflag &= ~CSTOPB;	//1 stop bit
-	tty.c_cflag |= CREAD;	//Enable read
-	tty.c_cflag |= CLOCAL;	//Ignore control lines
-	//Local flags
-	tty.c_lflag = 0;		//No local processing: use non-canonical (raw) mode, disable echo, etc.
-	//Control characters
-	tty.c_cc[VMIN] = 2;		//Block on read until 2 chars have been read
-	tty.c_cc[VTIME] = 0;	//Read timeout not used
-
-	//Set intial baud rate
-	cfsetispeed(&tty, B115200);
-	cfsetospeed(&tty, B115200);
-
-	//Flush serial port and apply settings
-	if(tcsetattr(arduinoFD, TCSAFLUSH, &tty) != 0) {
-		perror("Error applying Arduino serial port settings");
-		throw std::runtime_error("arduino initialization failed");
-	}
 
 	printf("Arduino initialized!\n");
 
@@ -59,7 +24,6 @@ Arduino::Arduino(const char *file) {
 //Destructor
 Arduino::~Arduino() {
 	stopMotors();
-	close(arduinoFD);
 }
 
 //Functions
@@ -73,13 +37,13 @@ double Arduino::getAnalogInput(unsigned char channel) {
 
 	unsigned char command[4] = {'A', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}
 
 	float data = 0.0f;
 	//Response is a 32-bit IEEE 754 float
-	if(read(arduinoFD, &data, sizeof(data)) != sizeof(data)) {
+	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
 		printf("Error reading from Arduino!\n");
 	}
 
@@ -96,13 +60,13 @@ int Arduino::getEncoderCount(unsigned char channel) {
 
 	unsigned char command[4] = {'C', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}
 
 	unsigned char data[4] = {0};
 	//Response is a 4-byte little-endian signed integer (translation may be redundant)
-	if(read(arduinoFD, &data, sizeof(data)) != sizeof(data)) {
+	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
 		printf("Error reading from Arduino!\n");
 	}
 	return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
@@ -118,13 +82,13 @@ double Arduino::getEncoderSpeed(unsigned char channel) {
 
 	unsigned char command[4] = {'E', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}
 
 	float data = 0.0f;
 	//Response is a 32-bit IEEE 754 float
-	if(read(arduinoFD, &data, sizeof(data)) != sizeof(data)) {
+	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
 		printf("Error reading from Arduino!\n");
 	}
 	return data;
@@ -139,7 +103,7 @@ void Arduino::setDigitalOutput(unsigned char channel, bool state) {
 
 	unsigned char command[4] = {'D', channel, state, '\0'};
 	//Command byte, channel byte, state byte, null byte
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}
 }
@@ -183,7 +147,7 @@ void Arduino::setPower(unsigned char channel, unsigned short power) {
 
 	unsigned char command[4] = {'P', channel, (unsigned char)(power & 0xFF), (unsigned char)((power >> 8) & 0xFF)};
 	//Command byte, channel byte, target low byte, target high byte
-	if(write(arduinoFD, &command, sizeof(command)) != sizeof(command)) {
+	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
 		printf("Error writing to Arduino!\n");
 	}
 }
