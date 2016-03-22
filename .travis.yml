@@ -1,0 +1,28 @@
+#Telepresence Travis CI Build Script
+
+#Disable email notifications
+notifications:
+    email: false
+
+#Use Ubuntu 14.04 LTS build environment
+os: linux
+sudo: required
+dist: trusty
+
+#Language and compiler settings
+language: cpp
+compiler: g++
+
+#Don't try to build the Windows branch
+branches:
+    except:
+        - windows
+
+#Install dependencies
+install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq libjsoncpp-dev
+
+#Build Telepresence
+script:
+    - make
