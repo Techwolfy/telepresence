@@ -13,9 +13,16 @@ Telepresence is a project designed to provide an easy method of communicating wi
 Building Telepresence
 ---------------------
 
-Currently, only Linux operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules depend on the various libraries associated with their hardware.
+Currently, only Linux operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules may depend on the various libraries associated with their hardware.
 
-To build telepresenced and the various client and robot binaries, simply run `make`.
+| Hardware							|	Software Dependencies																					|
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Arduino							|	Requires [`teleduino`](https://github.com/techwolfy/teleduino) to be installed on the Arduino			|
+| Pololu Maestro servo controller	|	None (integrated driver)																				|
+| Parallax servo controller			|	None (integrated driver)																				|
+| Raspberry Pi						|	Requires [`ServoBlaster`](https://github.com/richardghirst/PiBits/tree/master/ServoBlaster) at runtime	|
+
+To build telepresence and the various robot libraries, simply run `make`.
 
 
 Using Telepresence

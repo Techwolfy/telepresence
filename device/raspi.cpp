@@ -2,62 +2,64 @@
 
 //Includes
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <stdexcept>
 #include "device/raspi.h"
-#include "lib/wiringPi/static/include/wiringPi.h"
-#include "lib/wiringPi/static/include/softPwm.h"
 
 //Constructor
-RasPi::RasPi() {
-	//Set up GPIO
-	if(wiringPiSetup() == -1) {	//Must be run as root!
-		printf("GPIO initialization failed!\n");
-		throw std::runtime_error("GPIO initialization failed");
-	}
-
-	//Initialize sofware PWM outputs
-	for(int i; i < 10; i++) {
-		pinMode(i, OUTPUT);
-		digitalWrite(i, LOW);
-		softPwmCreate(i, 0, 200);	//20ms period
+RasPi::RasPi() : fd(0) {
+	//Set up Pi-Blaster
+	fd = open("/dev/pi-blaster", O_WRONLY);
+	if(fd < 0) {
+		printf("Error opening ServoBlaster!\n");
+		throw std::runtime_error("raspi servoblaster initialization failed");
 	}
 
 	//Make sure all motors are stopped
 	stopMotors();
+
+	printf("ServoBlaster GPIO Software PWM initialized!\n");
 }
 
 //Destructor
 RasPi::~RasPi() {
 	stopMotors();
+	close(fd);
 }
 
 //Functions
 //Set power of a specific motor
-void RasPi::setMotorPower(int motorNum, double power) {
-	if(motorNum < 0 || motorNum > RASPI_NUM_MOTORS) {
-		printf("Invalid motor GPIO pin!\n");
-		return;
-	}
-
-	//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
-	softPwmWrite(motorNum, scalePower(power));	//TODO: Test, output range may be wrong
+void RasPi::setMotorPower(unsigned int motorNum, double power) {
+	setPower(motorNum, scalePower(power));
 }
 
 //Stop all motors
 void RasPi::stopMotors() {
 	for(int i = 0; i < RASPI_NUM_MOTORS; i++) {
-		softPwmWrite(i, scalePower(0.0));
+		setPower(i, scalePower(0.0));
 	}
 }
 
-//Scale power from (-1.0, 1.0) to RasPi range of (10, 20)
-double RasPi::scalePower(double power) {
+//Scale power from (-1.0, 1.0) to RasPi range of (100, 200)
+unsigned int RasPi::scalePower(double power) {
 	if(power > 1.0) {
 		power = 1.0;
 	} else if(power < -1.0) {
 		power = -1.0;
 	}
 
-	//-1 to 1, -5 to 5, 10 to 20
-	return (power * 5) + 15;
+	//Scale from (-1.0, 1.0) to (100, 200) microseconds * 10; 0 is 150 (neutral)
+	return (power * 50) + 150;
+}
+
+void RasPi::setPower(unsigned int channel, unsigned int power) {
+	if(channel > RASPI_NUM_MOTORS) {
+		printf("Invalid motor channel!\n");
+	}
+
+	//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
+	char command[7] = {0};
+	sprintf(command, "%u=%u\n", channel, power);
+	write(fd, command, sizeof(command));
 }

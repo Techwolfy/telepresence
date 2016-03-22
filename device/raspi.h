@@ -15,15 +15,19 @@ public:
 
 	//Functions
 	inline int getNumMotors() {return RASPI_NUM_MOTORS;}
-	void setMotorPower(int motorNum, double power);
+	void setMotorPower(unsigned int motorNum, double power);
 	void stopMotors();
 
 private:
 	//Constants
-	static const int RASPI_NUM_MOTORS = 10;
+	static const int RASPI_NUM_MOTORS = 8;
+
+	//Variables
+	int fd;
 
 	//Functions
-	double scalePower(double power);
+	unsigned int scalePower(double power);
+	void setPower(unsigned int channel, unsigned int power);
 };
 
 #endif //RASPI_H
