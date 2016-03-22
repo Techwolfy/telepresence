@@ -48,7 +48,7 @@ void Watchdog::reset() {
 
 //Tell the caller if the watchdog has died
 bool Watchdog::isAlive() {
-	if((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - lastTime)).count() <= interval) {
+	if((unsigned long)(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - lastTime)).count() <= interval) {
 		return true;
 	} else {
 		if(!muted) {

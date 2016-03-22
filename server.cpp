@@ -78,7 +78,7 @@ void Server::run() {
 		} else {
 			printf("Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
 		}
-		ping["time"] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		ping["time"] = (Json::Value::UInt)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		sendPing(clientAddress);
 		sendPing(robotAddress);
 		ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;
@@ -147,5 +147,5 @@ void Server::printData(Json::Value &data) {
 
 //Print the latency of a data packet to the console
 void Server::printLatency(Json::Value &data) {
-	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
+	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
 }
