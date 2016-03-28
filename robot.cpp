@@ -6,10 +6,6 @@
 	#include <dlfcn.h>
 #else
 	#include <windows.h>
-	//Windows.h contains "#define interface struct" for compatibility reasons, which interferes with the robot interface variable
-	#ifdef interface
-		#undef interface
-	#endif
 #endif
 #include <chrono>
 #include <string>
@@ -37,19 +33,19 @@ Robot::Robot(const char *address, const char *port, const char *key, bool listen
 Robot::Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile, const char *libOptions) : Server(address, port, key, listen),
 																																 watchdog(500, false),
 																																 robotLibrary(NULL),
-																																 interface(NULL),
+																																 robotInterface(NULL),
 																																 axesSize(0),
 																																 buttonsSize(0),
 																																 axes(NULL),
 																																 buttons(NULL) {
-	//Set up robot interface
+	//Set up robot robotInterface
 	if(libFile != NULL) {
 		loadRobotLibrary(libFile);
 	} else {
 		createInterface = &createRobot;
 		destroyInterface = &destroyRobot;
 	}
-	interface = createInterface(libOptions);
+	robotInterface = createInterface(libOptions);
 
 	//Set up output packet
 	out["frameNum"] = 0;
@@ -73,7 +69,7 @@ Robot::Robot(const char *address, const char *port, const char *key, bool listen
 
 //Destructor
 Robot::~Robot() {
-	destroyInterface(interface);
+	destroyInterface(robotInterface);
 
 #ifndef _WIN32	//Linux/POSIX shared library destructor
 	if(robotLibrary != NULL) {
@@ -147,7 +143,7 @@ void Robot::loadRobotLibrary(const char *filename) {
 void Robot::run() {
 	//Check the watchdog timer
 	if(!watchdog.isAlive()) {
-		interface->stop();
+		robotInterface->stop();
 	}
 
 	//Display last received data and send a ping once every ~500ms
@@ -196,7 +192,7 @@ void Robot::run() {
 		for(unsigned int i = 0; i < buttonsSize; i++) {
 			buttons[i] = in["buttons"].get(i, false).asBool();
 		}
-		interface->run(axesSize, axes, buttonsSize, buttons);
+		robotInterface->run(axesSize, axes, buttonsSize, buttons);
 	}
 }
 

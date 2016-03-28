@@ -17,6 +17,6 @@ protected:
 };
 
 extern "C" RobotInterface* createRobot(const char *options);
-extern "C" void destroyRobot(RobotInterface *interface);
+extern "C" void destroyRobot(RobotInterface *robotInterface);
 
 #endif //ROBOTINTERFACE_H

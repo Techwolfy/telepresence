@@ -25,7 +25,7 @@ private:
 	//Variables
 	Watchdog watchdog;
 	void *robotLibrary;
-	RobotInterface *interface;
+	RobotInterface *robotInterface;
 	unsigned int axesSize;
 	unsigned int buttonsSize;
 	double *axes;
@@ -38,7 +38,7 @@ private:
 
 	//Shared library functions
 	RobotInterface *(*createInterface)(const char *options);
-	void (*destroyInterface)(RobotInterface *interface);
+	void (*destroyInterface)(RobotInterface *robotInterface);
 };
 
 #endif //ROBOT_H
