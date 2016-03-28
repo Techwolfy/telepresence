@@ -5,7 +5,7 @@
 #ifndef _WIN32
 	#include <netinet/in.h>
 #else
-	#include <winsock.h>
+	#include <winsock2.h>
 #endif
 #include <jsoncpp/json/json.h>
 #include "util/udpsocket.h"

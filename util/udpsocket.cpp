@@ -1,29 +1,52 @@
 //UDPSocket.cpp
 
+//Preprocessor Macros
+//Simple switch for platform-specific code
+#ifndef _WIN32	//Linux/POSIX support
+	#define IFPOSIX(x) x
+	#define IFWIN32(x)
+	#define PERROR(x) perror(x)
+	#define HERROR(x) herror(x)
+#else			//Windows support
+	#define IFPOSIX(x)
+	#define IFWIN32(x) x
+	#define PERROR(x) printf(x ": %d\n", WSAGetLastError())
+	#define HERROR(x) PERROR(x)
+#endif
+
 //Includes
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#define __STDC_FORMAT_MACROS	//FIXME: Compiler bug in mingw-w64 requires this, but the C++11 standard explicitly doesn't
 #include <inttypes.h>
 #ifndef _WIN32
 	#include <sys/socket.h>
 	#include <netinet/in.h>
 	#include <netdb.h>
 #else
-	#include <winsock.h>
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
 #endif
-#include <netinet/in.h>
+#include <stdexcept>
 #include "util/udpsocket.h"
 
 //Constructor
 UDPSocket::UDPSocket() : open(false),
 						 serverFD(0),
-						 readFlags(MSG_TRUNC),
+						 readFlags(IFPOSIX(MSG_TRUNC) IFWIN32(0)),
 						 server{0},
 						 client{0} {
-
+	#ifdef _WIN32
+		//Initialize WinSock
+		WSADATA wsaData = {0};
+		if(WSAStartup(0x0202, &wsaData) != 0) {
+			printf("Error inializing WinSock2: %d\n", WSAGetLastError());
+			throw std::runtime_error("winsock2 initialization failed");
+		}
+	#endif
 }
 
 //Destructor
@@ -58,7 +81,7 @@ int UDPSocket::openSocket(unsigned long localAddress, int localPort, unsigned lo
 
 	//Bind socket
 	if(bind(serverFD, (struct sockaddr *)&server, sizeof(server)) < 0) {
-		printf("Error binding socket!\n");
+		PERROR("Error binding socket");
 		return -1;
 	}
 
@@ -79,7 +102,7 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 	} else {
 		struct hostent *localHost = gethostbyname(localAddress);
 		if(localHost == NULL) {
-			printf("Error finding local host!\n");
+			HERROR("Error finding local host");
 			return -1;
 		} else {
 			localAddressNum = *(unsigned long *)localHost->h_addr_list[0];
@@ -94,7 +117,7 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 	if(remoteAddress != NULL) {
 		struct hostent *remoteHost = gethostbyname(remoteAddress);
 		if(remoteHost == NULL) {
-			printf("Error finding remote host!\n");
+			HERROR("Error finding remote host");
 			return -1;
 		}
 		remoteAddressNum = *(unsigned long *)remoteHost->h_addr_list[0];
@@ -112,7 +135,12 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 //Close socket
 void UDPSocket::closeSocket() {
 	if(serverFD != 0) {
+#ifndef _WIN32
 		close(serverFD);
+#else
+		closesocket(serverFD);
+		WSACleanup();
+#endif
 		open = false;
 	}
 }
@@ -123,19 +151,46 @@ bool UDPSocket::isOpen() {
 }
 
 //Set whether or not to block when reading or writing data (default: block)
-void UDPSocket::blockRead(bool block) {
-	if(block) {
-		readFlags &= ~MSG_DONTWAIT;
-	} else {
-		readFlags |= MSG_DONTWAIT;
+int UDPSocket::blockRead(bool block) {
+	//Socket must be open
+	if(!open) {
+		return -1;
 	}
+#ifndef _WIN32
+	//Get current socket flags
+	int socketFlags = fcntl(serverFD, F_GETFL, 0);
+	if(socketFlags < 0) {
+		PERROR("Error changing UDP socket blocking type");
+		return -1;
+	}
+
+	//Add or remove O_NONBLOCK flag and save changes
+	socketFlags |= block ? ~O_NONBLOCK : O_NONBLOCK;
+	if(fcntl(serverFD, F_SETFL, socketFlags) < 0) {
+		PERROR("Error changing UDP socket blocking type");
+		return -1;
+	}
+#else
+	//Update socket nonblocking I/O flag
+	unsigned long blockMode = !block;	//0 disables nonblocking mode, nonzero values enable it
+	if(ioctlsocket(serverFD, FIONBIO, &blockMode) < 0) {
+		PERROR("Error changing UDP socket blocking type");
+		return -1;
+	}
+#endif
+	return 0;
 }
 
 //Set maximum length of socket recieve buffer
 int UDPSocket::setRecieveBufferLength(int length) {
-	int result = setsockopt(serverFD, SOL_SOCKET, SO_RCVBUF, &length, sizeof(length));
+	//Socket must be open
+	if(!open) {
+		return -1;
+	}
+	//Update socket receive buffer length
+	int result = setsockopt(serverFD, SOL_SOCKET, SO_RCVBUF, IFWIN32((const char *))&length, sizeof(length));
 	if(result < 0) {
-		perror("Error setting UDP socket recieve buffer length");
+		PERROR("Error setting UDP socket recieve buffer length");
 	}
 	return result;
 }
@@ -147,6 +202,11 @@ int UDPSocket::readData(void *data, int length) {
 
 //Read data from bound socket and retrieve remote sender address
 int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
+	//Socket must be open
+	if(!open) {
+		return -1;
+	}
+
 	socklen_t remoteLength;
 	if(remote != NULL) {
 		remoteLength = sizeof(*remote);
@@ -154,13 +214,15 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 		remoteLength = 0;
 	}
 
-	int readLength = recvfrom(serverFD, data, length, readFlags, (struct sockaddr *)remote, &remoteLength);
+	//Read data from socket
+	int readLength = recvfrom(serverFD, IFWIN32((char *))data, length, readFlags, (struct sockaddr *)remote, &remoteLength);
 	if(readLength < 0) {
-		if(errno != EAGAIN) {
-			printf("Error reading from socket!\n");
+		if(IFPOSIX(errno != EAGAIN) IFWIN32(WSAGetLastError() != WSAEWOULDBLOCK && WSAGetLastError() != WSAEMSGSIZE)) {
+			PERROR("Error reading from socket");
 		}
 		return -1;
-	} else if(readLength > length) {
+	}
+	if(readLength > length IFWIN32(|| WSAGetLastError() == WSAEMSGSIZE)) {
 		printf("Received datagram larger than buffer!\n");
 		printf("Expected bytes: %d Received bytes: %d\n", length, readLength);
 		return -1;
@@ -170,17 +232,26 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 }
 
 //Write to client defined when socket opened
-void UDPSocket::writeData(void *data, int length) {
+int UDPSocket::writeData(void *data, int length) {
 	if(client.sin_addr.s_addr != 0) {
-		writeData(&client, data, length);
+		return writeData(&client, data, length);
 	} else {
 		printf("Error writing to socket!\n");
+		return -1;
 	}
 }
 
 //Write to arbitrary client
-void UDPSocket::writeData(sockaddr_in *remote, void *data, int length) {
-	if(sendto(serverFD, data, length, 0, (struct sockaddr *)remote, sizeof(*remote)) < 0) {
-		printf("Error writing to socket!\n");
+int UDPSocket::writeData(sockaddr_in *remote, void *data, int length) {
+	//Socket must be open
+	if(!open) {
+		return -1;
 	}
+
+	//Write data to socket
+	if(sendto(serverFD, IFWIN32((const char *))data, length, 0, (struct sockaddr *)remote, sizeof(*remote)) < 0) {
+		PERROR("Error writing to socket");
+		return -1;
+	}
+	return 0;
 }

@@ -9,7 +9,7 @@
 #ifndef _WIN32
 	#include <netinet/in.h>
 #else
-	#include <winsock.h>
+	#include <winsock2.h>
 #endif
 #include <jsoncpp/json/json.h>
 #include "server.h"
@@ -42,7 +42,10 @@ Server::Server(const char *address, const char *port, const char *key, bool list
 	}
 
 	//Don't block on read so the main loop can check for SIGINT
-	s.blockRead(false);
+	if(s.blockRead(false) < 0) {
+		printf("Failed to set socket as nonblocking!\n");
+		throw std::runtime_error("socket initialization failed");
+	}
 
 	//Limit socket receive buffer to prevent excessive lag
 	if(s.setRecieveBufferLength(25) < 0) {	//Max delay of 500ms at 50 frames per second

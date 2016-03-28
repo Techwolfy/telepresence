@@ -2,11 +2,11 @@
 #define UDPSOCKET_H
 
 //Includes
-#ifndef _WIN32
+#ifndef _WIN32	//Linux/POSIX support
 	#include <sys/socket.h>
 	#include <netinet/in.h>
-#else
-	#include <winsock.h>
+#else			//Windows support
+	#include <winsock2.h>
 #endif
 
 //Declaration
@@ -22,12 +22,12 @@ public:
 	int openSocket(const char *localAddress, const char *localPort, const char *remoteAddress, const char *remotePort);
 	void closeSocket();
 	bool isOpen();
-	void blockRead(bool block);
+	int blockRead(bool block);
 	int setRecieveBufferLength(int length);
 	int readData(void *data, int length);
 	int readData(void *data, int length, sockaddr_in *remote);
-	void writeData(void *data, int length);
-	void writeData(sockaddr_in *remote, void *data, int length);
+	int writeData(void *data, int length);
+	int writeData(sockaddr_in *remote, void *data, int length);
 
 private:
 	//Variables
