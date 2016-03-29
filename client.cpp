@@ -52,7 +52,7 @@ Client::Client(const char *address, const char *port, const char *key, bool list
 #if !defined(__CYGWIN__) && !defined(_WIN32)
 	controller = new Joystick(joyNum);
 #else
-	printf("JOSTICKS ARE CURRENTLY UNSUPPORTED IN WINDOWS BUILDS!\n");
+	printf("JOYSTICKS ARE CURRENTLY UNSUPPORTED IN WINDOWS BUILDS!\n");
 	exit(1);
 #endif
 }

@@ -2,14 +2,14 @@
 
 #Variables
 VPATH=$(wildcard */) ; lib/jsoncpp/jsoncpp
-CXX=g++
+CXX=i686-w64-mingw32-g++
 AR=ar rsc
 CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -I. -Ilib/jsoncpp
 #NOTE: -fPIC is enabled by default
 LFLAGS=
 SHARED=-fPIC -shared
-LIBS=-ldl
-OBJS=jsoncpp.o telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o controlFile.o dummyDevice.o #FIXME: joystick.o, parallax.o, pololu.o, arduino.o currently removed for windows builds
+LIBS=-static-libgcc -static-libstdc++ -lws2_32	#NOTE: -ldl unnecessary for windows builds
+OBJS=jsoncpp.o telepresence.o server.o client.o robot.o udpsocket.o watchdog.o ratelimit.o dummyJoystick.o controlFile.o dummyDevice.o	#FIXME: serial.o, joystick.o, parallax.o, pololu.o, arduino.o currently removed for windows builds
 #NOTE: Raspi-specific objects and build steps removed for windows builds
 ROBOTS=dummyRobot.o basicRobot.o #NOTE: parallaxRobot.o, pololuRobot.o, arduinoRobot.o raspiRobot.o currently removed for windows builds
 BUILDOBJS=$(addprefix build/, $(OBJS))
