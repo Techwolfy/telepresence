@@ -78,7 +78,7 @@ void Server::run() {
 		} else {
 			printf("Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
 		}
-		ping["time"] = (Json::Value::UInt)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		sendPing(clientAddress);
 		sendPing(robotAddress);
 		ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;

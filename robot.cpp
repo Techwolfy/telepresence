@@ -162,7 +162,7 @@ void Robot::run() {
 
 //Ping the server
 void Robot::sendPing() {
-	ping["time"] = (Json::Value::UInt)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if(listening) {
 		sendPing(clientAddress);
 	} else {
