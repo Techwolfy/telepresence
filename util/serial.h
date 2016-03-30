@@ -2,7 +2,12 @@
 #define SERIAL_H
 
 //Includes
-#include <termios.h>
+#ifndef _WIN32	//Linux/POSIX support
+	#include <termios.h>
+#else			//Windows support
+	#define WIN32_LEAN_AND_MEAN	//Don't include winsock etc.
+	#include <windows.h>
+#endif
 
 //Declaration
 class Serial {
@@ -22,8 +27,14 @@ public:
 
 private:
 	//Variables
+#ifndef _WIN32
 	int fd;
 	struct termios tty;
+#else
+	HANDLE handle;
+	DCB dcb;
+	COMMTIMEOUTS timeout;
+#endif
 };
 
 #endif //SERIAL_H
