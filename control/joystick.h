@@ -2,7 +2,12 @@
 #define JOYSTICK_H
 
 //Includes
-#include <linux/joystick.h>
+#ifndef _WIN32	//Linux/POSIX support
+	#include <linux/joystick.h>
+#else			//Windows support
+	#define WIN32_LEAN_AND_MEAN	//Don't include winsock etc.
+	#include <windows.h>
+#endif
 #include "control/controller.h"
 
 //Declaration
@@ -22,15 +27,14 @@ public:
 	double getAxis(int axis);
 	bool getButton(int button);
 
-	//Variables
-	static const int JOY_X_AXIS;
-	static const int JOY_Y_AXIS;
-	static const int JOY_Z_AXIS;
-
 private:
 	//Variables
 	int joyFD;
+#ifndef _WIN32
 	struct js_event joyEvent;
+#else
+	JOYINFOEX joyEvent;
+#endif
 	int numAxes;
 	int numButtons;
 	int *axes;

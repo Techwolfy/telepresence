@@ -7,14 +7,13 @@ AR=
 CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I.
 SHARED=-fPIC -shared
 LIBS=
-OBJS=
+OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o
 ifneq ($(OS), Windows_NT)	#Linux/POSIX support
 	CXX+=g++
 	AR+=ar
 	CFLAGS+=-fPIC
 	LIBS+=-ldl -ljsoncpp
-	OBJS+=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
 else						#Windows support
 	VPATH+= ; lib/jsoncpp/jsoncpp
 	CXX+=i686-w64-mingw32-g++
@@ -24,8 +23,8 @@ else						#Windows support
 	CFLAGS+=-D__STDC_FORMAT_MACROS
 	#MSVCRT stdio functions don't honor C99 format specifiers, so use the MinGW versions
 	CFLAGS+=-D__USE_MINGW_ANSI_STDIO=1
-	LIBS+=-static-libgcc -static-libstdc++ -lws2_32
-	OBJS+=jsoncpp.o telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o	#FIXME: joystick.o currently removed for windows builds
+	LIBS+=-static-libgcc -static-libstdc++ -lws2_32 -lwinmm
+	OBJS+=jsoncpp.o
 endif
 BUILDOBJS=$(addprefix build/, $(OBJS))
 BUILDROBOTS=$(addprefix build/, $(ROBOTS))

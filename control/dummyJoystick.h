@@ -21,11 +21,6 @@ public:
 	double getAxis(int axis);
 	bool getButton(int button);
 
-	//Constants
-	static const int JOY_X_AXIS;
-	static const int JOY_Y_AXIS;
-	static const int JOY_Z_AXIS;
-
 private:
 	//Constants
 	static const int DUMMY_JOY_AXES;
