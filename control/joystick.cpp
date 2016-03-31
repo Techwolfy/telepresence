@@ -31,7 +31,7 @@ Joystick::Joystick(int joyNum) : joyFD(-1),
 								 name{0} {
 	char joyFile[15] = "/dev/input/js0";
 	if(joyNum >= 0 && joyNum < 10) {
-		sprintf(joyFile, "/dev/input/js%d", joyNum);
+		snprintf(joyFile, sizeof(joyFile), "/dev/input/js%d", joyNum);
 	} else {
 		printf("Error identifying joystick!\n");
 		throw std::runtime_error("couldn't identify joystick");
