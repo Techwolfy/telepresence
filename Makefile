@@ -2,27 +2,53 @@
 
 #Variables
 VPATH=$(wildcard */)
-CXX=g++
-AR=ar rsc
-CFLAGS=-std=c++11 -fPIC -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I.
+CXX=
+AR=
+CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I.
 SHARED=-fPIC -shared
-LIBS=-ldl -ljsoncpp
-OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
+LIBS=
+OBJS=
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o
+ifneq ($(OS), Windows_NT)	#Linux/POSIX support
+	CXX+=g++
+	AR+=ar
+	CFLAGS+=-fPIC
+	LIBS+=-ldl -ljsoncpp
+	OBJS+=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
+else						#Windows support
+	VPATH+= ; lib/jsoncpp/jsoncpp
+	CXX+=i686-w64-mingw32-g++
+	AR+=i686-w64-mingw32-ar
+	CFLAGS+=-Ilib/jsoncpp
+	#Compiler bug in mingw-w64 requires this, but the C++11 standard explicitly doesn't
+	CFLAGS+=-D__STDC_FORMAT_MACROS
+	#MSVCRT stdio functions don't honor C99 format specifiers, so use the MinGW versions
+	CFLAGS+=-D__USE_MINGW_ANSI_STDIO=1
+	LIBS+=-static-libgcc -static-libstdc++ -lws2_32
+	OBJS+=jsoncpp.o telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o	#FIXME: joystick.o currently removed for windows builds
+endif
 BUILDOBJS=$(addprefix build/, $(OBJS))
 BUILDROBOTS=$(addprefix build/, $(ROBOTS))
 
 
 #Build everything
 .PHONY: all
-all: bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so
+all: $(if $(filter $(OS), Windows_NT), libjsoncpp) bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so
 
 #Load dependency rules
 -include $(BUILDOBJS:.o=.d)
 -include $(BUILDROBOTS:.o=.d)
 
+
+#Build libjsoncpp
+libjsoncpp:
+	if [ -d lib/jsoncpp ]; then (cd lib/jsoncpp && git pull); else (git clone https://github.com/open-source-parsers/jsoncpp.git lib/jsoncpp); fi
+	cd lib/jsoncpp; python amalgamate.py
+	cd lib/jsoncpp; cp -r dist/ jsoncpp/
+
+
 #Create folder for intermediate build files
-build:
+build: | $(if $(filter $(OS), Windows_NT), libjsoncpp)
 	@echo "Building object files..."
 	mkdir -p build
 
@@ -45,7 +71,7 @@ build/raspiRobot.o: basicRobot.cpp | build
 
 #Build archive of robot-independent files
 build/telepresence.a: $(BUILDOBJS) | build
-	$(AR) $@ $(BUILDOBJS)
+	$(AR) rsc $@ $(BUILDOBJS)
 
 
 #Create folder for output binaries

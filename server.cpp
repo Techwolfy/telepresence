@@ -3,6 +3,7 @@
 //Includes
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include <chrono>
 #include <string>
 #include <stdexcept>
@@ -143,7 +144,7 @@ bool Server::validateKey(Json::Value &data) {
 
 //Print the contents of a data packet to the console
 void Server::printData(Json::Value &data) {
-	printf("Client frame: %d\n", data.get("frameNum", 0).asUInt());
+	printf("Client frame: %u\n", data.get("frameNum", 0).asUInt());
 	for(unsigned int i = 0; i < data["axes"].size(); i++) {
 		printf("Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
 	}
@@ -154,5 +155,5 @@ void Server::printData(Json::Value &data) {
 
 //Print the latency of a data packet to the console
 void Server::printLatency(Json::Value &data) {
-	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", data.get("time", 0).asUInt64(), (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
+	printf("Sent (ms): %" PRIu64 ", Received (ms): %" PRIu64 ", Latency (ms): %" PRIu64 "\n", data.get("time", 0).asUInt64(), (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(), std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - data.get("time", 0).asUInt64());
 }

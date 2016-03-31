@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#define __STDC_FORMAT_MACROS	//FIXME: Compiler bug in mingw-w64 requires this, but the C++11 standard explicitly doesn't
 #include <inttypes.h>
 #ifndef _WIN32
 	#include <sys/socket.h>
@@ -127,8 +126,8 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 		remotePortNum = htons(atoi(remotePort));
 	}
 
-	printf("Local host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", localAddress, localPort, ntohl(localAddressNum), ntohs(localPortNum));
-	printf("Remote host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", remoteAddress, remotePort, ntohl(remoteAddressNum), ntohs(remotePortNum));
+	printf("Local host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", localAddress, localPort, IFWIN32((uint32_t))ntohl(localAddressNum), ntohs(localPortNum));
+	printf("Remote host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", remoteAddress, remotePort, IFWIN32((uint32_t))ntohl(remoteAddressNum), ntohs(remotePortNum));
     return openSocket(localAddressNum, localPortNum, remoteAddressNum, remotePortNum);
 }
 
