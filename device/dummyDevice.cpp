@@ -33,7 +33,7 @@ DummyDevice::~DummyDevice() {
 
 //Functions
 //Dummy analog input; output input number to console
-double DummyDevice::getAnalogInput(int analogNum) {
+double DummyDevice::getAnalogInput(unsigned char analogNum) {
 	if(analogNum < 0 || analogNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy encoder!\n");
 		return 0.0;
@@ -51,7 +51,7 @@ double DummyDevice::getAnalogInput(int analogNum) {
 }
 
 //Dummy digital input; output input number to console
-bool DummyDevice::getDigitalInput(int digitalNum) {
+bool DummyDevice::getDigitalInput(unsigned char digitalNum) {
 	if(digitalNum < 0 || digitalNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy digital input!\n");
 		return false;
@@ -69,7 +69,7 @@ bool DummyDevice::getDigitalInput(int digitalNum) {
 }
 
 //Dummy encoder; output encoder number to console
-int DummyDevice::getEncoderCount(int encoderNum) {
+int DummyDevice::getEncoderCount(unsigned char encoderNum) {
 	if(encoderNum < 0 || encoderNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy encoder!\n");
 		return 0;
@@ -88,7 +88,7 @@ int DummyDevice::getEncoderCount(int encoderNum) {
 }
 
 //Dummy encoder; output encoder number to console
-double DummyDevice::getEncoderRate(int encoderNum) {
+double DummyDevice::getEncoderRate(unsigned char encoderNum) {
 	if(encoderNum < 0 || encoderNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy encoder!\n");
 		return 0.0;
@@ -107,7 +107,7 @@ double DummyDevice::getEncoderRate(int encoderNum) {
 }
 
 //Dummy digital output; output target state to console
-void DummyDevice::setDigitalOutput(int outputNum, bool state) {
+void DummyDevice::setDigitalOutput(unsigned char outputNum, bool state) {
 	if(outputNum < 0 || outputNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy digital output!\n");
 		return;
@@ -133,7 +133,7 @@ void DummyDevice::clearDigitalOutputs() {
 }
 
 //Dummy motor; output target value to console
-void DummyDevice::setMotorPower(int motorNum, double power) {
+void DummyDevice::setMotorPower(unsigned char motorNum, double power) {
 	if(motorNum < 0 || motorNum >= DUMMY_DEVICE_NUM_IO) {
 		printf("Invalid dummy motor!\n");
 		return;

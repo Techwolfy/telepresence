@@ -2,7 +2,6 @@
 
 //Includes
 #include <stdio.h>
-#include <unistd.h>
 #include <stdexcept>
 #include "device/parallax.h"
 
@@ -56,7 +55,7 @@ void Parallax::setBaudRate(bool increase) {
 	}
 
 	//Check if a response was received
-	if(serialSelect(100000)) {	//1 decisecond
+	if(!serialSelect(100000)) {	//1 decisecond
 		//No response received; wrong baud rate?
 		printf("Error communicating with Parallax servo controller!\n");
 		throw std::runtime_error("parallax speed increase failed");

@@ -16,13 +16,13 @@ public:
 	~Parallax();
 
 	//Functions
-	inline int getNumMotors() {return PARALLAX_NUM_MOTORS;}
+	inline unsigned char getNumMotors() {return PARALLAX_NUM_MOTORS;}
 	void setMotorPower(unsigned char channel, double power);
 	void stopMotors();
 
 private:
 	//Constants
-	static const int PARALLAX_NUM_MOTORS = 16;
+	static const unsigned char PARALLAX_NUM_MOTORS = 16;
 
 	//Functions
 	using Serial::setBaudRate;

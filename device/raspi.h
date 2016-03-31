@@ -14,13 +14,13 @@ public:
 	~RasPi();
 
 	//Functions
-	inline int getNumMotors() {return RASPI_NUM_MOTORS;}
-	void setMotorPower(unsigned int motorNum, double power);
+	inline unsigned char getNumMotors() {return RASPI_NUM_MOTORS;}
+	void setMotorPower(unsigned char motorNum, double power);
 	void stopMotors();
 
 private:
 	//Constants
-	static const int RASPI_NUM_MOTORS = 8;
+	static const unsigned char RASPI_NUM_MOTORS = 8;
 
 	//Variables
 	int fd;

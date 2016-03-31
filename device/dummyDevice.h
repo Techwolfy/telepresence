@@ -15,27 +15,27 @@ public:
 	~DummyDevice();
 
 	//Functions
-	inline int getNumAnalogInputs() {return DUMMY_DEVICE_NUM_IO;};
-	double getAnalogInput(int analogNum);
+	inline unsigned char getNumAnalogInputs() {return DUMMY_DEVICE_NUM_IO;};
+	double getAnalogInput(unsigned char analogNum);
 	//Digital Input
-	inline int getNumDigitalInputs() {return DUMMY_DEVICE_NUM_IO;};
-	bool getDigitalInput(int digitalNum);
+	inline unsigned char getNumDigitalInputs() {return DUMMY_DEVICE_NUM_IO;};
+	bool getDigitalInput(unsigned char digitalNum);
 	//Encoder Input
-	inline int getNumEncoders() {return DUMMY_DEVICE_NUM_IO;};
-	int getEncoderCount(int encoderNum);
-	double getEncoderRate(int encoderNum);
+	inline unsigned char getNumEncoders() {return DUMMY_DEVICE_NUM_IO;};
+	int getEncoderCount(unsigned char encoderNum);
+	double getEncoderRate(unsigned char encoderNum);
 	//Digital Output
-	inline int getNumDigitalOutputs() {return DUMMY_DEVICE_NUM_IO;};
-	void setDigitalOutput(int outputNum, bool state);
+	inline unsigned char getNumDigitalOutputs() {return DUMMY_DEVICE_NUM_IO;};
+	void setDigitalOutput(unsigned char outputNum, bool state);
 	void clearDigitalOutputs();
 	//Motor Output
-	inline int getNumMotors() {return DUMMY_DEVICE_NUM_IO;};
-	void setMotorPower(int motorNum, double power);
+	inline unsigned char getNumMotors() {return DUMMY_DEVICE_NUM_IO;};
+	void setMotorPower(unsigned char motorNum, double power);
 	void stopMotors();
 
 private:
 	//Constants
-	static const int DUMMY_DEVICE_NUM_IO = 10;
+	static const unsigned char DUMMY_DEVICE_NUM_IO = 10;
 
 	//Variables
 	Ratelimit messages;

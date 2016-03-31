@@ -16,13 +16,13 @@ public:
 	~Pololu();
 
 	//Functions
-	inline int getNumMotors() {return POLOLU_NUM_MOTORS;}
+	inline unsigned char getNumMotors() {return POLOLU_NUM_MOTORS;}
 	void setMotorPower(unsigned char channel, double power);
 	void stopMotors();
 
 private:
 	//Constants
-	static const int POLOLU_NUM_MOTORS = 24;
+	static const unsigned char POLOLU_NUM_MOTORS = 24;
 
 	//Functions
 	unsigned short scalePower(double power);

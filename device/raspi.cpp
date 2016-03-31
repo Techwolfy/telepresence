@@ -30,7 +30,7 @@ RasPi::~RasPi() {
 
 //Functions
 //Set power of a specific motor
-void RasPi::setMotorPower(unsigned int motorNum, double power) {
+void RasPi::setMotorPower(unsigned char motorNum, double power) {
 	setPower(motorNum, scalePower(power));
 }
 
@@ -56,6 +56,7 @@ unsigned int RasPi::scalePower(double power) {
 void RasPi::setPower(unsigned int channel, unsigned int power) {
 	if(channel > RASPI_NUM_MOTORS) {
 		printf("Invalid motor channel!\n");
+		return;
 	}
 
 	//1.0ms full reverse, 1.5ms neural, 2.0ms full forward

@@ -114,5 +114,5 @@ bool Serial::serialSelect(int timeout) {
 	struct timeval maxTime;
 	maxTime.tv_sec = 0;
 	maxTime.tv_usec = timeout;
-	return select(fd + 1, &readSet, NULL, NULL, &maxTime) != 1;	//If false, no bytes available; wrong baud rate?
+	return select(fd + 1, &readSet, NULL, NULL, &maxTime) == 1;	//If false, no bytes available; wrong baud rate?
 }

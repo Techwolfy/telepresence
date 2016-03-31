@@ -2,7 +2,6 @@
 
 //Includes
 #include <stdio.h>
-#include <termios.h>
 #include <stdexcept>
 #include "device/pololu.h"
 
