@@ -1,6 +1,12 @@
 #Telepresence Makefile
 
-#Variables
+#Makefile settings
+SHELL=/bin/bash
+GREEN=\e[32m
+CYAN=\e[36m
+RESET=\e[0m
+
+#Compilation variables
 VPATH=$(wildcard */)
 CXX=
 AR=
@@ -41,6 +47,7 @@ all: $(if $(filter $(OS), Windows_NT), libjsoncpp) bin/telepresence bin/dummy.so
 
 #Build libjsoncpp
 libjsoncpp:
+	@echo -e "$(GREEN)Building libjsoncpp...$(RESET)"
 	if [ -d lib/jsoncpp ]; then (cd lib/jsoncpp && git pull); else (git clone https://github.com/open-source-parsers/jsoncpp.git lib/jsoncpp); fi
 	cd lib/jsoncpp; python amalgamate.py
 	cd lib/jsoncpp; cp -r dist/ jsoncpp/
@@ -48,7 +55,7 @@ libjsoncpp:
 
 #Create folder for intermediate build files
 build: | $(if $(filter $(OS), Windows_NT), libjsoncpp)
-	@echo "Building object files..."
+	@echo -e "$(GREEN)Building object files...$(RESET)"
 	mkdir -p build
 
 #Generic compilation rule
@@ -70,42 +77,44 @@ build/raspiRobot.o: basicRobot.cpp | build
 
 #Build archive of robot-independent files
 build/telepresence.a: $(BUILDOBJS) | build
+	@echo -e "$(CYAN)Creating archive file...$(RESET)"
 	$(AR) rsc $@ $(BUILDOBJS)
 
 
 #Create folder for output binaries
 bin:
+	@echo -e "$(GREEN)Building binary files...$(RESET)"
 	mkdir -p bin
 
 #Build main binary
 bin/telepresence: build/telepresence.a build/dummyRobot.o | bin
-	@echo "Building telepresence binary..."
+	@echo -e "$(CYAN)Building telepresence binary...$(RESET)"
 	$(CXX) -o $@ $^ $(LIBS)
 
 #Build output module shared libraries
 bin/dummy.so: build/basicRobot.o build/telepresence.a | bin
-	@echo "Building dummy output module..."
+	@echo -e "$(CYAN)Building dummy output module...$(RESET)"
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/parallax.so: build/parallaxRobot.o build/telepresence.a | bin
-	@echo "Building parallax output module..."
+	@echo -e "$(CYAN)Building parallax output module...$(RESET)"
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/pololu.so: build/pololuRobot.o build/telepresence.a | bin
-	@echo "Building pololu output module..."
+	@echo -e "$(CYAN)Building pololu output module...$(RESET)"
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/arduino.so: build/arduinoRobot.o build/telepresence.a | bin
-	@echo "Building arduino output module..."
+	@echo -e "$(CYAN)Building arduino output module...$(RESET)"
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 bin/raspi.so: build/raspiRobot.o build/telepresence.a | bin
-	@echo "Building raspi output module..."
+	@echo -e "$(CYAN)Building raspi output module...$(RESET)"
 	$(CXX) $(SHARED) -o $@ $^ $(LIBS)
 
 
 #Clean up old build files
 .PHONY: clean
 clean:
-	@echo "Cleaning up old build files..."
+	@echo -e "$(GREEN)Cleaning up old build files...$(RESET)"
 	rm -rf build/ bin/
