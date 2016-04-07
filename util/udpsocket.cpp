@@ -6,12 +6,12 @@
 	#define IFPOSIX(x) x
 	#define IFWIN32(x)
 	#define PERROR(x) perror(x)
-	#define HERROR(x) herror(x)
+	#define GAIERROR(x, y) printf(x ": %s\n", gai_strerror(y))
 #else			//Windows support
 	#define IFPOSIX(x)
 	#define IFWIN32(x) x
 	#define PERROR(x) printf(x ": %d\n", WSAGetLastError())
-	#define HERROR(x) PERROR(x)
+	#define GAIERROR(x, y) printf(x ": %d\n", WSAGetLastError())
 #endif
 
 //Includes
@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <inttypes.h>
 #ifndef _WIN32
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -36,16 +35,16 @@
 UDPSocket::UDPSocket() : open(false),
 						 serverFD(0),
 						 readFlags(IFPOSIX(MSG_TRUNC) IFWIN32(0)),
-						 server{0},
-						 client{0} {
-	#ifdef _WIN32
+						 server(NULL),
+						 client(NULL) {
+#ifdef _WIN32
 		//Initialize WinSock
 		WSADATA wsaData = {0};
 		if(WSAStartup(0x0202, &wsaData) != 0) {
 			printf("Error inializing WinSock2: %d\n", WSAGetLastError());
 			throw std::runtime_error("winsock2 initialization failed");
 		}
-	#endif
+#endif
 }
 
 //Destructor
@@ -54,34 +53,69 @@ UDPSocket::~UDPSocket() {
 }
 
 //Functions
+//Print the IPv4 or IPv6 address:port pair contained in a sockaddr struct into the provided buffer
+char* UDPSocket::getAddrString(struct sockaddr *addr, socklen_t addrLength, char *buffer, int length) {
+	char address[NI_MAXHOST] = {'0'};	//First element is '0', all others are '\0'
+	char port[NI_MAXSERV] = {'0'};		//First element is '0', all others are '\0'
+
+	//Set address and port based on input address family
+	if(addr != NULL) {
+		int gniResult = 0;
+		if((gniResult = getnameinfo(addr, addrLength, address, sizeof(address), port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
+			GAIERROR("Error retreiving address string", gniResult);
+		}
+	}
+
+	//Print address:port pair; NULL and unknown address families are displayed as "[0]:0"
+	snprintf(buffer, length, "[%s]:%s", address, port);
+
+	//Return a pointer to the provided buffer
+	return buffer;
+}
+
 //Open and bind a UDP socket
-int UDPSocket::openSocket(unsigned long localAddress, int localPort, unsigned long remoteAddress, int remotePort) {
+int UDPSocket::openSocket(struct addrinfo *localAddr, struct addrinfo *remoteAddr) {
 	//Make sure an existing socket doesn't get leaked
 	if(serverFD != 0) {
 		closeSocket();
 	}
 
+	//Save server and client structs
+	server = localAddr;
+	client = remoteAddr;
+
 	//Open socket
-	serverFD = socket(AF_INET, SOCK_DGRAM, 0);
+	serverFD = socket(server->ai_family, SOCK_DGRAM, 0);
 	if(serverFD < 0) {
 		printf("Error opening socket!\n");
 		return -1;
 	}
 
-	//Set up server struct
-	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = localAddress;
-	server.sin_port = localPort;
-
-	//Set up client struct
-	client.sin_family = AF_INET;
-	client.sin_addr.s_addr = remoteAddress;
-	client.sin_port = remotePort;
+	//Set the socket to dual-stack, if using IPv6 and not the default
+	if(server->ai_family == AF_INET6) {
+		int ipv6only = 0;	//Not IPv6 only; allow both IPv6 and IPv6-mapped-IPv4 connections
+		if(setsockopt(serverFD, IPPROTO_IPV6, IPV6_V6ONLY, IFWIN32((char *))&ipv6only, sizeof(ipv6only)) < 0) {
+			PERROR("Error setting UDP socket as dual-stack IPv4/IPv6");
+			return -1;
+		}
+	}
 
 	//Bind socket
-	if(bind(serverFD, (struct sockaddr *)&server, sizeof(server)) < 0) {
+	if(bind(serverFD, server->ai_addr, server->ai_addrlen) < 0) {
 		PERROR("Error binding socket");
 		return -1;
+	}
+
+	//Print string representation of bound socket
+	struct sockaddr_storage boundAddress = {0};
+	socklen_t boundAddressLength = sizeof(boundAddress);
+	int gsnResult = 0;
+	if((gsnResult = getsockname(serverFD, (struct sockaddr *)&boundAddress, &boundAddressLength)) < 0) {
+		GAIERROR("Error finding bound address", gsnResult);
+		return -1;
+	} else {
+		char buffer[NI_MAXHOST + NI_MAXSERV] = {0};	//Hostname, colon, service name (or port number), null character
+		printf("Bound to %s.\n", getAddrString((struct sockaddr *)&boundAddress, boundAddressLength, buffer, sizeof(buffer)));
 	}
 
 	open = true;
@@ -90,45 +124,46 @@ int UDPSocket::openSocket(unsigned long localAddress, int localPort, unsigned lo
 
 //Map provided address and port to network values
 int UDPSocket::openSocket(const char *localAddress, const char *localPort, const char *remoteAddress, const char *remotePort) {
-	unsigned long localAddressNum = 0;
-	unsigned long remoteAddressNum = 0;
-	int localPortNum = 0;
-	int remotePortNum = 0;
+	struct addrinfo *local = NULL;
+	struct addrinfo *remote = NULL;
+	struct addrinfo hints = {0};
+	hints.ai_family = AF_UNSPEC;						//IPv4 or IPv6
+	hints.ai_socktype = SOCK_DGRAM;						//UDP
+	hints.ai_flags = AI_ALL | AI_V4MAPPED | AI_ADDRCONFIG;	//Only return useful addresses, based on type and connectivity
+	int gaiResult = 0;
+
 
 	//Look up the hostname stored in localAddress, if any
 	if(localAddress == NULL) {
-		localAddressNum = htonl(INADDR_ANY);	//0.0.0.0
-	} else {
-		struct hostent *localHost = gethostbyname(localAddress);
-		if(localHost == NULL) {
-			HERROR("Error finding local host");
-			return -1;
-		} else {
-			localAddressNum = *(unsigned long *)localHost->h_addr_list[0];
-		}
+		hints.ai_flags |= AI_PASSIVE;	//Use INADDR_ANY or INADDR6_ANY
 	}
-
-	if(localPort != NULL) {
-		localPortNum = htons(atoi(localPort));
+	if(localPort == NULL) {
+		localPort = "0";
+	}
+	if((gaiResult = getaddrinfo(localAddress, localPort, &hints, &local)) != 0) {
+		printf("Error finding local host: %s\n", gai_strerror(gaiResult));
+		return -1;
 	}
 
 	//Look up the hostname stored in remoteAddress
-	if(remoteAddress != NULL) {
-		struct hostent *remoteHost = gethostbyname(remoteAddress);
-		if(remoteHost == NULL) {
-			HERROR("Error finding remote host");
+	if(remoteAddress != NULL && remotePort != NULL) {
+		hints.ai_family = local->ai_family;	//Make sure the client connection uses the same address family as the server socket
+		hints.ai_flags &= ~AI_PASSIVE;		//Use value of remoteAddress
+		if((gaiResult = getaddrinfo(remoteAddress, remotePort, &hints, &remote)) != 0) {
+			printf("Error finding local host: %s\n", gai_strerror(gaiResult));
 			return -1;
 		}
-		remoteAddressNum = *(unsigned long *)remoteHost->h_addr_list[0];
 	}
 
-	if(remotePort != NULL) {
-		remotePortNum = htons(atoi(remotePort));
+	//Print string representation of addrinfo structs
+	char buffer[NI_MAXHOST + NI_MAXSERV] = {0};
+	printf("Local host %s:%s found as %s.\n", (localAddress == NULL ? "0" : localAddress), (localPort == NULL ? "0" : localPort), getAddrString(local->ai_addr, local->ai_addrlen, buffer, sizeof(buffer)));
+	if(remote != NULL) {
+		printf("Remote host %s:%s found as %s.\n", (remoteAddress == NULL ? "0" : remoteAddress), (remotePort == NULL ? "0" : remotePort), getAddrString(remote->ai_addr, remote->ai_addrlen, buffer, sizeof(buffer)));
 	}
 
-	printf("Local host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", localAddress, localPort, IFWIN32((uint32_t))ntohl(localAddressNum), ntohs(localPortNum));
-	printf("Remote host %s:%s found as %" PRIu32 ":%" PRIu16 ".\n", remoteAddress, remotePort, IFWIN32((uint32_t))ntohl(remoteAddressNum), ntohs(remotePortNum));
-    return openSocket(localAddressNum, localPortNum, remoteAddressNum, remotePortNum);
+	//Open the socket
+	return openSocket(local, remote);
 }
 
 //Close socket
@@ -141,6 +176,15 @@ void UDPSocket::closeSocket() {
 		WSACleanup();
 #endif
 		open = false;
+	}
+
+	if(server != NULL) {
+		freeaddrinfo(server);
+		server = NULL;
+	}
+	if(client != NULL) {
+		freeaddrinfo(client);
+		client = NULL;
 	}
 }
 
@@ -186,8 +230,9 @@ int UDPSocket::setRecieveBufferLength(int length) {
 	if(!open) {
 		return -1;
 	}
+
 	//Update socket receive buffer length
-	int result = setsockopt(serverFD, SOL_SOCKET, SO_RCVBUF, IFWIN32((const char *))&length, sizeof(length));
+	int result = setsockopt(serverFD, SOL_SOCKET, SO_RCVBUF, IFWIN32((char *))&length, sizeof(length));
 	if(result < 0) {
 		PERROR("Error setting UDP socket recieve buffer length");
 	}
@@ -196,25 +241,18 @@ int UDPSocket::setRecieveBufferLength(int length) {
 
 //Read data from bound socket
 int UDPSocket::readData(void *data, int length) {
-	return readData(data, length, NULL);
+	return readData(data, length, (struct sockaddr *)NULL, NULL);	//Null cast disambiguates function call
 }
 
 //Read data from bound socket and retrieve remote sender address
-int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
+int UDPSocket::readData(void *data, int length, struct sockaddr *remote, socklen_t *remoteLength) {
 	//Socket must be open
 	if(!open) {
 		return -1;
 	}
 
-	socklen_t remoteLength;
-	if(remote != NULL) {
-		remoteLength = sizeof(*remote);
-	} else {
-		remoteLength = 0;
-	}
-
 	//Read data from socket
-	int readLength = recvfrom(serverFD, IFWIN32((char *))data, length, readFlags, (struct sockaddr *)remote, &remoteLength);
+	int readLength = recvfrom(serverFD, IFWIN32((char *))data, length, readFlags, remote, remoteLength);
 	if(readLength < 0) {
 		if(IFPOSIX(errno != EAGAIN) IFWIN32(WSAGetLastError() != WSAEWOULDBLOCK && WSAGetLastError() != WSAEMSGSIZE)) {
 			PERROR("Error reading from socket");
@@ -230,10 +268,14 @@ int UDPSocket::readData(void *data, int length, sockaddr_in *remote) {
 	return readLength;
 }
 
+int UDPSocket::readData(void *data, int length, struct sockaddr_storage *remote, socklen_t *remoteLength) {
+	return readData(data, length, (struct sockaddr *)remote, remoteLength);
+}
+
 //Write to client defined when socket opened
 int UDPSocket::writeData(void *data, int length) {
-	if(client.sin_addr.s_addr != 0) {
-		return writeData(&client, data, length);
+	if(client != NULL) {
+		return writeData(client->ai_addr, client->ai_addrlen, data, length);
 	} else {
 		printf("Error writing to socket!\n");
 		return -1;
@@ -241,16 +283,21 @@ int UDPSocket::writeData(void *data, int length) {
 }
 
 //Write to arbitrary client
-int UDPSocket::writeData(sockaddr_in *remote, void *data, int length) {
+int UDPSocket::writeData(struct sockaddr *remote, socklen_t remoteLength, void *data, int length) {
 	//Socket must be open
 	if(!open) {
 		return -1;
 	}
 
 	//Write data to socket
-	if(sendto(serverFD, IFWIN32((const char *))data, length, 0, (struct sockaddr *)remote, sizeof(*remote)) < 0) {
+	int tmp = 0;
+	if((tmp=sendto(serverFD, IFWIN32((char *))data, length, 0, remote, remoteLength)) < 0) {
 		PERROR("Error writing to socket");
 		return -1;
 	}
 	return 0;
+}
+
+int UDPSocket::writeData(struct sockaddr_storage *remote, socklen_t remoteLength, void *data, int length) {
+	return writeData((struct sockaddr *)remote, remoteLength, data, length);
 }

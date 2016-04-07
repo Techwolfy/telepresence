@@ -12,7 +12,6 @@
 	#include <sys/ioctl.h>
 	#include <linux/joystick.h>
 #else
-	#define WIN32_LEAN_AND_MEAN	//Don't include winsock etc.
 	#include <windows.h>
 	#include <mmsystem.h>
 #endif

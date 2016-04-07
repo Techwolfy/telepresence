@@ -10,7 +10,7 @@ RESET=\e[0m
 VPATH=$(wildcard */)
 CXX=
 AR=
-CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I.
+CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -pedantic -Wall -Werror -I. -g
 SHARED=-fPIC -shared
 LIBS=
 OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
@@ -22,13 +22,17 @@ ifneq ($(OS), Windows_NT)	#Linux/POSIX support
 	LIBS+=-ldl -ljsoncpp
 else						#Windows support
 	VPATH+= ; lib/jsoncpp/jsoncpp
-	CXX+=i686-w64-mingw32-g++
-	AR+=i686-w64-mingw32-ar
+	CXX+=x86_64-w64-mingw32-g++
+	AR+=x86_64-w64-mingw32-ar
 	CFLAGS+=-Ilib/jsoncpp
 	#Compiler bug in mingw-w64 requires this, but the C++11 standard explicitly doesn't
 	CFLAGS+=-D__STDC_FORMAT_MACROS
 	#MSVCRT stdio functions don't honor C99 format specifiers, so use the MinGW versions
 	CFLAGS+=-D__USE_MINGW_ANSI_STDIO=1
+	#Require Windows 7 or higher for IPv6 Winsock2 features
+	CFLAGS+=-D_WIN32_WINNT=_WIN32_WINNT_WIN7
+	#Disable unused windows features (e.g. Winsock1, which breaks later uses of Winsock2)
+	CFLAGS+=-DWIN32_LEAN_AND_MEAN -DNOCRYPT -DNOUSER -DNOGDI -DNOSERVICE -DNOMCX -DNOATOM -DNOGDI -DNOGDICAPMASKS -DNOMETAFILE -DNOMINMAX -DNOMSG -DNOOPENFILE -DNORASTEROPS -DNOSCROLL -DNOSOUND -DNOSYSMETRICS -DNOTEXTMETRIC -DNOWH -DNOCOMM -DNOKANJI -DNOCRYPT -DNOMCX
 	LIBS+=-static-libgcc -static-libstdc++ -lws2_32 -lwinmm
 	OBJS+=jsoncpp.o
 endif

@@ -5,7 +5,6 @@
 #ifndef _WIN32
 	#include <dlfcn.h>
 #else
-	#define WIN32_LEAN_AND_MEAN	//Don't include winsock etc.
 	#include <windows.h>
 #endif
 #include <chrono>
@@ -98,18 +97,15 @@ void Robot::loadRobotLibrary(const char *filename) {
 	}
 
 	//Set up robot constructor
-	const char* symbolError = NULL;	//TODO: Free dlerror's pointer?
-	*(void**)(&createInterface) = dlsym(robotLibrary, "createRobot");
-	symbolError = dlerror();
-	if(symbolError) {
+	createInterface = (RobotInterface* (*)(const char *))dlsym(robotLibrary, "createRobot");
+	if(!createInterface) {
 		printf("Failed to load robot constructor: %s\n", dlerror());
 		throw std::runtime_error("failed to load robot constructor");
 	}
 
 	//Set up robot destructor
-	*(void**)(&destroyInterface) = dlsym(robotLibrary, "destroyRobot");
-	symbolError = dlerror();
-	if(symbolError) {
+	destroyInterface = (void (*)(RobotInterface*))dlsym(robotLibrary, "destroyRobot");
+	if(!destroyInterface) {
 		printf("Failed to load robot destructor: %s\n", dlerror());
 		throw std::runtime_error("failed to load robot destructor");
 	}
@@ -159,7 +155,8 @@ void Robot::run() {
 
 	//Get control data from server
 	buffer[0] = '\0';
-	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress) < 0 || buffer[0] == '\0') {
+	unknownAddressLength = sizeof(unknownAddress);
+	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress, &unknownAddressLength) < 0 || buffer[0] == '\0') {
 		return;
 	} else {
 		reader.parse(buffer, in, false);
@@ -201,7 +198,7 @@ void Robot::run() {
 void Robot::sendPing() {
 	ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if(listening) {
-		sendPing(clientAddress);
+		sendPing(&clientAddress, clientAddressLength);
 	} else {
 		std::string pingJSON = writer.write(ping);
 		s.writeData((void *)pingJSON.c_str(), pingJSON.length());

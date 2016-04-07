@@ -73,7 +73,8 @@ void Client::run() {
 
 	//Respond to pings
 	buffer[0] = '\0';
-	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress) > 0 && buffer[0] != '\0') {
+	unknownAddressLength = sizeof(unknownAddress);
+	if(s.readData((void *)buffer, sizeof(buffer), &unknownAddress, &unknownAddressLength) > 0 && buffer[0] != '\0') {
 		reader.parse(buffer, in, false);
 		//Only respond if key is valid
 		if(validateKey(in) && in.get("ping", false).asBool()) {
@@ -95,7 +96,7 @@ void Client::run() {
 	//Send data to robot
 	std::string outJSON = writer.write(out);
 	if(listening) {
-		s.writeData(&robotAddress, (void *)outJSON.c_str(), outJSON.length());
+		s.writeData(&robotAddress, robotAddressLength, (void *)outJSON.c_str(), outJSON.length());
 	} else {
 		s.writeData((void *)outJSON.c_str(), outJSON.length());
 	}
@@ -105,7 +106,7 @@ void Client::run() {
 void Client::sendPing() {
 	ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if(listening) {
-		sendPing(robotAddress);
+		sendPing(&robotAddress, robotAddressLength);
 	} else {
 		std::string pingJSON = writer.write(ping);
 		s.writeData((void *)pingJSON.c_str(), pingJSON.length());

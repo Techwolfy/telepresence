@@ -8,9 +8,11 @@
 #include <string>
 #include <stdexcept>
 #ifndef _WIN32
+	#include <sys/socket.h>
 	#include <netinet/in.h>
 #else
 	#include <winsock2.h>
+	#include <ws2tcpip.h>
 #endif
 #include <jsoncpp/json/json.h>
 #include "server.h"
@@ -26,6 +28,9 @@ Server::Server(const char *address, const char *port, const char *key, bool list
 																								   unknownAddress{0},
 																								   clientAddress{0},
 																								   robotAddress{0},
+																								   unknownAddressLength(0),
+																								   clientAddressLength(0),
+																								   robotAddressLength(0),
 																								   password(key),
 																								   listening(listen),
 																								   keepalive(500) {
@@ -87,15 +92,16 @@ void Server::run() {
 			printf("Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
 		}
 		ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		sendPing(clientAddress);
-		sendPing(robotAddress);
+		sendPing(&clientAddress, clientAddressLength);
+		sendPing(&robotAddress, robotAddressLength);
 		ping["frameNum"] = ping.get("frameNum", 0).asUInt() + 1;
 		keepalive.feed();
 	}
 
 	//Get data from stream
 	buffer[0] = '\0';
-	if(s.readData((void *)&buffer, sizeof(buffer), &unknownAddress) < 0 || buffer[0] == '\0') {
+	unknownAddressLength = sizeof(unknownAddress);
+	if(s.readData((void *)&buffer, sizeof(buffer), &unknownAddress, &unknownAddressLength) < 0 || buffer[0] == '\0') {
 		return;
 	} else {
 		reader.parse(buffer, in, false);
@@ -110,7 +116,7 @@ void Server::run() {
 	}
 
 	//Send client's data to robot
-	s.writeData(&robotAddress, (void *)buffer, sizeof(buffer));
+	s.writeData(&robotAddress, robotAddressLength, (void *)buffer, sizeof(buffer));
 }
 
 //Process a received ping
@@ -119,9 +125,11 @@ void Server::handlePing() {
 		if(in.get("isClient", true).asBool()) {
 			printf("Ping %d received from client!\n", in.get("frameNum", 0).asUInt());
 			clientAddress = unknownAddress;
+			clientAddressLength = unknownAddressLength;
 		} else {
 			printf("Ping %d received from robot!\n", in.get("frameNum", 0).asUInt());
 			robotAddress = unknownAddress;
+			robotAddressLength = unknownAddressLength;
 		}
 	} else {
 		printf("Ping %d recieved!\n", in.get("frameNum", 0).asUInt());
@@ -130,16 +138,16 @@ void Server::handlePing() {
 }
 
 //Attempt to ping a remote client
-void Server::sendPing(struct sockaddr_in &remoteAddress) {
-	if(remoteAddress.sin_addr.s_addr != 0) {
+void Server::sendPing(struct sockaddr_storage *remoteAddress, socklen_t remoteAddressLength) {
+	if((remoteAddress->ss_family == AF_INET && ((struct sockaddr_in *)remoteAddress)->sin_addr.s_addr != 0) || (remoteAddress->ss_family == AF_INET6 && ((struct sockaddr_in6 *)remoteAddress)->sin6_addr.s6_addr != 0)) {
 		std::string pingJSON = writer.write(ping);
-		s.writeData(&remoteAddress, (void *)pingJSON.c_str(), pingJSON.length());
+		s.writeData(remoteAddress, remoteAddressLength, (void *)pingJSON.c_str(), pingJSON.length());
 	}
 }
 
 //Check if a given data packet's key is valid
 bool Server::validateKey(Json::Value &data) {
-	return (strcmp(password, in.get("key", "").asCString()) == 0);
+	return strcmp(password, in.get("key", "").asCString()) == 0;
 }
 
 //Print the contents of a data packet to the console

@@ -5,8 +5,8 @@
 #ifndef _WIN32	//Linux/POSIX support
 	#include <linux/joystick.h>
 #else			//Windows support
-	#define WIN32_LEAN_AND_MEAN	//Don't include winsock etc.
 	#include <windows.h>
+	#include <mmsystem.h>
 #endif
 #include "control/controller.h"
 

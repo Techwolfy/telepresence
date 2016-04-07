@@ -4,9 +4,10 @@
 //Includes
 #ifndef _WIN32	//Linux/POSIX support
 	#include <sys/socket.h>
-	#include <netinet/in.h>
+	#include <netdb.h>
 #else			//Windows support
 	#include <winsock2.h>
+	#include <ws2tcpip.h>
 #endif
 
 //Declaration
@@ -25,20 +26,23 @@ public:
 	int blockRead(bool block);
 	int setRecieveBufferLength(int length);
 	int readData(void *data, int length);
-	int readData(void *data, int length, sockaddr_in *remote);
+	int readData(void *data, int length, struct sockaddr *remote, socklen_t *remoteLength);
+	int readData(void *data, int length, struct sockaddr_storage *remote, socklen_t *remoteLength);
 	int writeData(void *data, int length);
-	int writeData(sockaddr_in *remote, void *data, int length);
+	int writeData(struct sockaddr *remote, socklen_t remoteLength, void *data, int length);
+	int writeData(struct sockaddr_storage *remote, socklen_t remoteLength, void *data, int length);
 
 private:
 	//Variables
 	bool open;
 	int serverFD;
 	int readFlags;
-	struct sockaddr_in server;
-	struct sockaddr_in client;
+	struct addrinfo *server;
+	struct addrinfo *client;
 
 	//Functions
-	int openSocket(unsigned long localAddress, int localPort, unsigned long remoteAddress, int remotePort);
+	static char* getAddrString(struct sockaddr *addr, socklen_t addrLength, char *buffer, int length);
+	int openSocket(struct addrinfo *localAddr, struct addrinfo *remoteAddr);
 };
 
 #endif //UDPSOCKET_H

@@ -3,9 +3,10 @@
 
 //Includes
 #ifndef _WIN32
-	#include <netinet/in.h>
+	#include <sys/socket.h>
 #else
 	#include <winsock2.h>
+	#include <ws2tcpip.h>
 #endif
 #include <jsoncpp/json/json.h>
 #include "util/udpsocket.h"
@@ -33,16 +34,19 @@ protected:
 	Json::Value in;
 	Json::Value out;
 	Json::Value ping;
-	struct sockaddr_in unknownAddress;
-	struct sockaddr_in clientAddress;
-	struct sockaddr_in robotAddress;
+	struct sockaddr_storage unknownAddress;
+	struct sockaddr_storage clientAddress;
+	struct sockaddr_storage robotAddress;
+	socklen_t unknownAddressLength;
+	socklen_t clientAddressLength;
+	socklen_t robotAddressLength;
 	const char *password;
 	bool listening;
 	Watchdog keepalive;
 
 	//Functions
 	virtual void handlePing();
-	virtual void sendPing(struct sockaddr_in &remoteAddress);
+	virtual void sendPing(struct sockaddr_storage *remoteAddress, socklen_t remoteAddressLength);
 	virtual bool validateKey(Json::Value &data);
 	static void printData(Json::Value &data);
 	static void printLatency(Json::Value &data);
