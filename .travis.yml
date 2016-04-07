@@ -13,11 +13,6 @@ dist: trusty
 language: cpp
 compiler: g++
 
-#Don't try to build the Windows branch
-branches:
-    except:
-        - windows
-
 #Install dependencies
 install:
     - sudo apt-get update -qq

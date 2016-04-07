@@ -13,7 +13,7 @@ Telepresence is a project designed to provide an easy method of communicating wi
 Building Telepresence
 ---------------------
 
-Currently, only Linux operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules may depend on the various libraries associated with their hardware.
+Linux and Windows (7 and newer) operating systems are supported. Telepresence itself depends only on [`JsonCpp`](https://github.com/open-source-parsers/jsoncpp) (for packet serialization and deserialization), but its input and output modules may depend on the various libraries associated with their hardware.
 
 | Hardware							|	Software Dependencies																					|
 |-----------------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -53,4 +53,3 @@ Pull requests welcome! Please try to keep the same code and commit message style
 * Add more modules for different types of input and output
 * Test non-dummy output modules
 * Add some method of bidirectional streaming for video and audio (e.g. via Youtube or Twitch)
-* Support Windows builds with MinGW
