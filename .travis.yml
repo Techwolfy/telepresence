@@ -13,10 +13,16 @@ dist: trusty
 language: cpp
 compiler: g++
 
+#Environment matrix
+env:
+    - OS=""
+    - OS="Windows_NT"
+
 #Install dependencies
 install:
     - sudo apt-get update -qq
     - sudo apt-get install -qq libjsoncpp-dev
+    - sudo apt-get install -qq g++-mingw-w64-i686
 
 #Build Telepresence
 script:

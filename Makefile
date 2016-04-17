@@ -3,6 +3,7 @@
 #Makefile settings
 SHELL=/bin/bash
 GREEN=\e[32m
+MAGENTA=\e[35m
 CYAN=\e[36m
 RESET=\e[0m
 
@@ -22,8 +23,8 @@ ifneq ($(OS), Windows_NT)	#Linux/POSIX support
 	LIBS+=-ldl -ljsoncpp
 else						#Windows support
 	VPATH+= ; lib/jsoncpp/jsoncpp
-	CXX+=x86_64-w64-mingw32-g++
-	AR+=x86_64-w64-mingw32-ar
+	CXX+=i686-w64-mingw32-g++
+	AR+=i686-w64-mingw32-ar
 	CFLAGS+=-Ilib/jsoncpp
 	#Compiler bug in mingw-w64 requires this, but the C++11 standard explicitly doesn't
 	CFLAGS+=-D__STDC_FORMAT_MACROS
@@ -42,7 +43,16 @@ BUILDROBOTS=$(addprefix build/, $(ROBOTS))
 
 #Build everything
 .PHONY: all
-all: $(if $(filter $(OS), Windows_NT), libjsoncpp) bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so
+all: osdetect $(if $(filter $(OS), Windows_NT), libjsoncpp) bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so
+
+#Print OS version of build
+.PHONY: osdetect
+osdetect:
+ifneq ($(OS), Windows_NT)
+	@echo -e "$(MAGENTA)Compiling for Linux.$(RESET)"
+else
+	@echo -e "$(MAGENTA)Compiling for Windows.$(RESET)"
+endif
 
 #Load dependency rules
 -include $(BUILDOBJS:.o=.d)
@@ -58,7 +68,7 @@ libjsoncpp:
 
 
 #Create folder for intermediate build files
-build: | $(if $(filter $(OS), Windows_NT), libjsoncpp)
+build: | osdetect $(if $(filter $(OS), Windows_NT), libjsoncpp)
 	@echo -e "$(GREEN)Building object files...$(RESET)"
 	mkdir -p build
 
@@ -86,7 +96,7 @@ build/telepresence.a: $(BUILDOBJS) | build
 
 
 #Create folder for output binaries
-bin:
+bin: | osdetect
 	@echo -e "$(GREEN)Building binary files...$(RESET)"
 	mkdir -p bin
 
