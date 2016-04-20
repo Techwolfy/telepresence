@@ -19,10 +19,13 @@ env:
     - OS="Windows_NT"
 
 #Install dependencies
+#NB: Ubuntu Trusty's version of mingw-w64 is missing some header information for Winsock2, so use Wily's version instead;
+#    see https://sourceforge.net/p/mingw-w64/mingw-w64/ci/93d153611f2c9ac471b5879f430b7b4a7c401ddb/
 install:
+    - if [[ "$OS" == "Windows_NT" ]]; then echo "deb http://us.archive.ubuntu.com/ubuntu/ wily main universe" | sudo tee -a /etc/apt/sources.list; fi
     - sudo apt-get update -qq
     - sudo apt-get install -qq libjsoncpp-dev
-    - sudo apt-get install -qq g++-mingw-w64-i686
+    - if [[ "$OS" == "Windows_NT" ]]; then sudo apt-get install -qq g++-mingw-w64-i686; fi
 
 #Build Telepresence
 script:

@@ -147,7 +147,7 @@ void Server::sendPing(struct sockaddr_storage *remoteAddress, socklen_t remoteAd
 
 //Check if a given data packet's key is valid
 bool Server::validateKey(Json::Value &data) {
-	return strcmp(password, in.get("key", "").asCString()) == 0;
+	return strcmp(password, data.get("key", "").asCString()) == 0;
 }
 
 //Print the contents of a data packet to the console

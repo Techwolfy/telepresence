@@ -37,7 +37,7 @@ private:
 	void sendPing();
 
 	//Shared library functions
-	RobotInterface *(*createInterface)(const char *options);
+	RobotInterface* (*createInterface)(const char *options);
 	void (*destroyInterface)(RobotInterface *robotInterface);
 };
 
