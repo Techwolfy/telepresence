@@ -1,9 +1,9 @@
 //Arduino.cpp
 
 //Includes
-#include <stdio.h>
 #include <stdexcept>
 #include "device/arduino.h"
+#include "util/log.h"
 
 //Constructor
 Arduino::Arduino() : Arduino("/dev/ttyACM0") {
@@ -15,7 +15,7 @@ Arduino::Arduino(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 	//Serial connection is 115200 8 N 1, full duplex
 		//https://www.arduino.cc/en/Serial/Begin
 
-	printf("Arduino initialized!\n");
+	Log::logf(Log::INFO, "Arduino initialized!\n");
 
 	//Make sure all motors are stopped
 	stopMotors();
@@ -31,20 +31,20 @@ Arduino::~Arduino() {
 //Retrieve the value of an analog input channel
 double Arduino::getAnalogInput(unsigned char channel) {
 	if(channel > TELEDUINO_NUM_ANALOG_INPUTS) {
-		printf("Invalid analog input channel!\n");
+		Log::logf(Log::WARN, "Invalid analog input channel!\n");
 		return 0.0;
 	}
 
 	unsigned char command[4] = {'A', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
+		Log::logf(Log::ERR, "Error writing to Arduino!\n");
 	}
 
 	float data = 0.0f;
 	//Response is a 32-bit IEEE 754 float
 	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
-		printf("Error reading from Arduino!\n");
+		Log::logf(Log::ERR, "Error reading from Arduino!\n");
 	}
 
 	return data;	//Float is promoted to double
@@ -54,20 +54,20 @@ double Arduino::getAnalogInput(unsigned char channel) {
 //NB: Speeds faster than the Arduino's capability to measure may be inaccurate
 int Arduino::getEncoderCount(unsigned char channel) {
 	if(channel > TELEDUINO_NUM_ENCODERS) {
-		printf("Invalid encoder channel!\n");
+		Log::logf(Log::WARN, "Invalid encoder channel!\n");
 		return 0;
 	}
 
 	unsigned char command[4] = {'C', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
+		Log::logf(Log::ERR, "Error writing to Arduino!\n");
 	}
 
 	unsigned char data[4] = {0};
 	//Response is a 4-byte little-endian signed integer (translation may be redundant)
 	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
-		printf("Error reading from Arduino!\n");
+		Log::logf(Log::ERR, "Error reading from Arduino!\n");
 	}
 	return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
 }
@@ -76,20 +76,20 @@ int Arduino::getEncoderCount(unsigned char channel) {
 //NB: Speeds faster than the Arduino's capability to measure may be inaccurate
 double Arduino::getEncoderSpeed(unsigned char channel) {
 	if(channel > TELEDUINO_NUM_ENCODERS) {
-		printf("Invalid encoder channel!\n");
+		Log::logf(Log::WARN, "Invalid encoder channel!\n");
 		return 0.0;
 	}
 
 	unsigned char command[4] = {'E', channel, 0x00, 0x00};
 	//Command byte, channel byte, 2 null bytes
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
+		Log::logf(Log::ERR, "Error writing to Arduino!\n");
 	}
 
 	float data = 0.0f;
 	//Response is a 32-bit IEEE 754 float
 	if(serialRead(&data, sizeof(data)) != sizeof(data)) {
-		printf("Error reading from Arduino!\n");
+		Log::logf(Log::ERR, "Error reading from Arduino!\n");
 	}
 	return data;
 }
@@ -97,14 +97,14 @@ double Arduino::getEncoderSpeed(unsigned char channel) {
 //Set state of a specific digital I/O port
 void Arduino::setDigitalOutput(unsigned char channel, bool state) {
 	if(channel > TELEDUINO_NUM_DIGITAL_OUTPUTS) {
-		printf("Invalid digital output channel!\n");
+		Log::logf(Log::WARN, "Invalid digital output channel!\n");
 		return;
 	}
 
 	unsigned char command[4] = {'D', channel, state, '\0'};
 	//Command byte, channel byte, state byte, null byte
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
+		Log::logf(Log::ERR, "Error writing to Arduino!\n");
 	}
 }
 
@@ -142,12 +142,12 @@ unsigned short Arduino::scalePower(double power) {
 //Set power of a specific motor channel
 void Arduino::setPower(unsigned char channel, unsigned short power) {
 	if(channel > TELEDUINO_NUM_MOTORS) {
-		printf("Invalid motor channel!\n");
+		Log::logf(Log::WARN, "Invalid motor channel!\n");
 	}
 
 	unsigned char command[4] = {'P', channel, (unsigned char)(power & 0xFF), (unsigned char)((power >> 8) & 0xFF)};
 	//Command byte, channel byte, target low byte, target high byte
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Arduino!\n");
+		Log::logf(Log::ERR, "Error writing to Arduino!\n");
 	}
 }

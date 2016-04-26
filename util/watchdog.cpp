@@ -1,9 +1,9 @@
 //Watchdog.cpp
 
 //Includes
-#include <stdio.h>
 #include <chrono>
 #include "util/watchdog.h"
+#include "util/log.h"
 
 //Constructor
 Watchdog::Watchdog() : Watchdog(500) {
@@ -14,14 +14,14 @@ Watchdog::Watchdog(unsigned long timeout, bool silent /* = true */) : interval(t
 																	  lastTime(std::chrono::steady_clock::now()),
 																	  muted(silent) {
 	if(!muted) {
-		printf("Watchdog started.\n");
+		Log::logf(Log::INFO, "Watchdog started.\n");
 	}
 }
 
 //Destructor
 Watchdog::~Watchdog() {
 	if(!muted) {
-		printf("Watchdog stopped.\n");
+		Log::logf(Log::INFO, "Watchdog stopped.\n");
 	}
 }
 
@@ -52,7 +52,7 @@ bool Watchdog::isAlive() {
 		return true;
 	} else {
 		if(!muted) {
-			printf("Watchdog died!\n");
+			Log::logf(Log::WARN, "Watchdog died!\n");
 		}
 		return false;
 	}

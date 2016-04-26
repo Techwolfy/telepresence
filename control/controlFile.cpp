@@ -2,10 +2,9 @@
 
 //Includes
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdexcept>
 #include "control/controlFile.h"
+#include "util/log.h"
 
 //Constructor
 ControlFile::ControlFile() : ControlFile("pipe") {
@@ -17,11 +16,11 @@ ControlFile::ControlFile(const char *filename) : file(NULL),
 	//Open file
 	file = fopen(filename, "r");
 	if(file == NULL) {
-		printf("Error opening control file!\n");
+		Log::logf(Log::ERR, "Error opening control file!\n");
 		throw std::runtime_error("couldn't open control file");
 	}
 
-	printf("Opened control file: %s\n", filename);
+	Log::logf(Log::INFO, "Opened control file: %s\n", filename);
 	update();
 }
 

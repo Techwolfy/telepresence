@@ -1,7 +1,6 @@
 //RedRobot.cpp
 
 //Includes
-#include <stdio.h>
 #include "robot/redRobot.h"
 #include "device/device.h"
 #include "device/pololu.h"

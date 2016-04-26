@@ -1,25 +1,25 @@
 //RasPi.cpp
 
 //Includes
-#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
 #include "device/raspi.h"
+#include "util/log.h"
 
 //Constructor
 RasPi::RasPi() : fd(0) {
 	//Set up Pi-Blaster
 	fd = open("/dev/pi-blaster", O_WRONLY);
 	if(fd < 0) {
-		printf("Error opening ServoBlaster!\n");
+		Log::logf(Log::ERR, "Error opening ServoBlaster!\n");
 		throw std::runtime_error("raspi servoblaster initialization failed");
 	}
 
 	//Make sure all motors are stopped
 	stopMotors();
 
-	printf("ServoBlaster GPIO Software PWM initialized!\n");
+	Log::logf(Log::INFO, "ServoBlaster GPIO Software PWM initialized!\n");
 }
 
 //Destructor
@@ -55,7 +55,7 @@ unsigned int RasPi::scalePower(double power) {
 
 void RasPi::setPower(unsigned int channel, unsigned int power) {
 	if(channel > RASPI_NUM_MOTORS) {
-		printf("Invalid motor channel!\n");
+		Log::logf(Log::WARN, "Invalid motor channel!\n");
 		return;
 	}
 

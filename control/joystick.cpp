@@ -2,7 +2,6 @@
 
 //Includes
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -16,6 +15,7 @@
 	#include <mmsystem.h>
 #endif
 #include "control/joystick.h"
+#include "util/log.h"
 
 //Constructor
 Joystick::Joystick() : Joystick(0) {
@@ -38,7 +38,7 @@ Joystick::Joystick(int joyNum) : joyFD(joyNum),
 	if(joyNum >= 0 && joyNum < 10) {
 		snprintf(joyFile, sizeof(joyFile), "/dev/input/js%d", joyNum);
 	} else {
-		printf("Error identifying joystick!\n");
+		Log::logf(Log::ERR, "Error identifying joystick!\n");
 		throw std::runtime_error("couldn't identify joystick");
 	}
 
@@ -47,7 +47,7 @@ Joystick::Joystick(int joyNum) : joyFD(joyNum),
 		//http://archives.seul.org/linuxgames/Aug-1999/msg00107.html
 	joyFD = open(joyFile, O_RDONLY | O_NONBLOCK);
 	if(joyFD < 0) {
-		printf("Joystick initialization failed!\n");
+		Log::logf(Log::ERR, "Joystick initialization failed!\n");
 		throw std::runtime_error("joystick initialization failed");
 	}
 
@@ -61,18 +61,18 @@ Joystick::Joystick(int joyNum) : joyFD(joyNum),
 	//Set up joystick
 		//https://msdn.microsoft.com/en-us/library/vs/alm/dd757116%28v=vs.85%29.aspx
 	if(joyGetNumDevs() < 1) {
-		printf("Error identifying joystick!\n");
+		Log::logf(Log::ERR, "Error identifying joystick!\n");
 		throw std::runtime_error("couldn't identify joystick");
 	}
 	if(joyGetPosEx(joyNum, &joyEvent) < 0) {
-		printf("Error finding joystick!\n");
+		Log::logf(Log::ERR, "Error finding joystick!\n");
 		throw std::runtime_error("couldn't find joystick");
 	}
 
 	//Load joystick info
 	JOYCAPS capabilities = {0};
 	if(joyGetDevCaps(joyNum, &capabilities, sizeof(capabilities)) < 0) {
-		printf("Error retreiving joystick capabilities!\n");
+		Log::logf(Log::ERR, "Error retreiving joystick capabilities!\n");
 		throw std::runtime_error("couldn't retreive joystick capabilities");
 	}
 	numAxes = capabilities.wNumAxes;
@@ -88,7 +88,7 @@ Joystick::Joystick(int joyNum) : joyFD(joyNum),
 	axes = (int *)calloc(numAxes, sizeof(int));
 	buttons = (bool *)calloc(numButtons, sizeof(bool));
 
-	printf("Initialized joystick: %s\n", name);
+	Log::logf(Log::INFO, "Initialized joystick: %s\n", name);
 }
 
 //Destructor
@@ -125,12 +125,12 @@ void Joystick::update() {
 	}
 
 	if(errno != EAGAIN) {
-		printf("Error reading from joystick!\n");
+		Log::logf(Log::WARN, "Error reading from joystick!\n");
 	}
 #else
 	//Retrieve current joystick state
 	if(joyGetPosEx(joyFD, &joyEvent) < 0) {
-		printf("Error reading from joystick!\n");
+		Log::logf(Log::WARN, "Error reading from joystick!\n");
 	} else {
 		//Update values of all present axes
 		switch(numAxes) {

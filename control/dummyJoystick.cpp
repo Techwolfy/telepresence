@@ -1,9 +1,8 @@
 //DummyJoystick.cpp
 
 //Includes
-#include <stdio.h>
-#include <stdlib.h>
 #include "control/dummyJoystick.h"
+#include "util/log.h"
 #include "util/ratelimit.h"
 
 //Constants
@@ -16,19 +15,19 @@ const bool DummyJoystick::DUMMY_JOY_BUTTON_VALUE = true;
 DummyJoystick::DummyJoystick() : messages(500, 1) {
 	updateRateID = messages.getID();
 
-	printf("Dummy joystick created.\n");
+	Log::logf(Log::INFO, "Dummy joystick created.\n");
 }
 
 //Destructor
 DummyJoystick::~DummyJoystick() {
-	printf("Dummy joystick destroyed.\n");
+	Log::logf(Log::INFO, "Dummy joystick destroyed.\n");
 }
 
 //Functions
 //"Update" the static dummy joystick values
 void DummyJoystick::update() {
 	if(messages.limitReached(updateRateID)) {
-		printf("Dummy joystick updated!\n");
+		Log::logf(Log::DEBUG, "Dummy joystick updated!\n");
 		messages.increment(updateRateID);
 	}
 }

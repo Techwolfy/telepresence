@@ -2,8 +2,8 @@
 #define DEVICE_H
 
 //Includes
-#include <stdio.h>
 #include <stdexcept>
+#include "util/log.h"
 
 //Declaration
 class Device {
@@ -37,7 +37,7 @@ protected:
 
 private:
 	inline void unsupportedOperation() {
-		printf("Unsupported device operation called!\n");
+		Log::logf(Log::ERR, "Unsupported device operation called!\n");
 		throw std::runtime_error("unsupported device operation called");
 	}
 };

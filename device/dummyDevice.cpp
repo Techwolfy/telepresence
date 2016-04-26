@@ -1,8 +1,8 @@
 //DummyDevice.cpp
 
 //Includes
-#include <stdio.h>
 #include "device/dummyDevice.h"
+#include "util/log.h"
 #include "util/ratelimit.h"
 
 //Constructor
@@ -23,28 +23,28 @@ DummyDevice::DummyDevice() : messages(500, 1),
 	sdoValueRateID = values.getID();
 	smpValueRateID = values.getID();
 
-	printf("Dummy motor created.\n");
+	Log::logf(Log::INFO, "Dummy motor created.\n");
 }
 
 //Destructor
 DummyDevice::~DummyDevice() {
-	printf("Dummy motor destroyed.\n");
+	Log::logf(Log::INFO, "Dummy motor destroyed.\n");
 }
 
 //Functions
 //Dummy analog input; output input number to console
 double DummyDevice::getAnalogInput(unsigned char analogNum) {
 	if(analogNum < 0 || analogNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy encoder!\n");
+		Log::logf(Log::WARN, "Invalid dummy encoder!\n");
 		return 0.0;
 	}
 
 	if(!messages.limitReached(gaiRateID)) {
-		printf("Dummy device getAnalogInput() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device getAnalogInput() called.\n");
 		messages.increment(gaiRateID);
 	}
 	if(!values.limitReached(gaiValueRateID)) {
-		printf("Analog Input %d: %f\n", analogNum, 0.5);
+		Log::logf(Log::DEBUG, "Analog Input %d: %f\n", analogNum, 0.5);
 		values.increment(gaiValueRateID);
 	}
 	return 0.5;
@@ -53,16 +53,16 @@ double DummyDevice::getAnalogInput(unsigned char analogNum) {
 //Dummy digital input; output input number to console
 bool DummyDevice::getDigitalInput(unsigned char digitalNum) {
 	if(digitalNum < 0 || digitalNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy digital input!\n");
+		Log::logf(Log::WARN, "Invalid dummy digital input!\n");
 		return false;
 	}
 
 	if(!messages.limitReached(gdiRateID)) {
-		printf("Dummy device getDigitalInput() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device getDigitalInput() called.\n");
 		messages.increment(gdiRateID);
 	}
 	if(!values.limitReached(gdiValueRateID)) {
-		printf("Digital Input %d: %c\n", digitalNum, 'T');
+		Log::logf(Log::DEBUG, "Digital Input %d: %c\n", digitalNum, 'T');
 		values.increment(gdiValueRateID);
 	}
 	return true;
@@ -71,17 +71,17 @@ bool DummyDevice::getDigitalInput(unsigned char digitalNum) {
 //Dummy encoder; output encoder number to console
 int DummyDevice::getEncoderCount(unsigned char encoderNum) {
 	if(encoderNum < 0 || encoderNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy encoder!\n");
+		Log::logf(Log::WARN, "Invalid dummy encoder!\n");
 		return 0;
 	}
 
 	if(!messages.limitReached(gecRateID)) {
-		printf("Dummy device getEncoderCount() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device getEncoderCount() called.\n");
 		messages.increment(gecRateID);
 		
 	}
 	if(!values.limitReached(gecValueRateID)) {
-		printf("Encoder %d Count: %d\n", encoderNum, 100);
+		Log::logf(Log::DEBUG, "Encoder %d Count: %d\n", encoderNum, 100);
 		values.increment(gecValueRateID);
 	}
 	return 100;
@@ -90,17 +90,17 @@ int DummyDevice::getEncoderCount(unsigned char encoderNum) {
 //Dummy encoder; output encoder number to console
 double DummyDevice::getEncoderRate(unsigned char encoderNum) {
 	if(encoderNum < 0 || encoderNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy encoder!\n");
+		Log::logf(Log::WARN, "Invalid dummy encoder!\n");
 		return 0.0;
 	}
 
 	if(!messages.limitReached(gerRateID)) {
-		printf("Dummy device getEncoderRate() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device getEncoderRate() called.\n");
 		messages.increment(gerRateID);
 		
 	}
 	if(!values.limitReached(gerValueRateID)) {
-		printf("Encoder %d RateID: %f\n", encoderNum, 5.0);
+		Log::logf(Log::DEBUG, "Encoder %d RateID: %f\n", encoderNum, 5.0);
 		values.increment(gerValueRateID);
 	}
 	return 5.0;
@@ -109,17 +109,17 @@ double DummyDevice::getEncoderRate(unsigned char encoderNum) {
 //Dummy digital output; output target state to console
 void DummyDevice::setDigitalOutput(unsigned char outputNum, bool state) {
 	if(outputNum < 0 || outputNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy digital output!\n");
+		Log::logf(Log::WARN, "Invalid dummy digital output!\n");
 		return;
 	}
 
 	if(!messages.limitReached(sdoRateID)) {
-		printf("Dummy device setDigitalOutput() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device setDigitalOutput() called.\n");
 		messages.increment(sdoRateID);
 		
 	}
 	if(!values.limitReached(sdoValueRateID)) {
-		printf("Digital Output %d: %c\n", outputNum, state ? 'T' : 'F');
+		Log::logf(Log::DEBUG, "Digital Output %d: %c\n", outputNum, state ? 'T' : 'F');
 		values.increment(sdoValueRateID);
 	}
 }
@@ -127,7 +127,7 @@ void DummyDevice::setDigitalOutput(unsigned char outputNum, bool state) {
 //Dummy digital output; output clear message to console
 void DummyDevice::clearDigitalOutputs() {
 	if(!messages.limitReached(cdoRateID)) {
-		printf("Dummy device clearDigitalOutputs() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device clearDigitalOutputs() called.\n");
 		messages.increment(cdoRateID);
 	}
 }
@@ -135,17 +135,17 @@ void DummyDevice::clearDigitalOutputs() {
 //Dummy motor; output target value to console
 void DummyDevice::setMotorPower(unsigned char motorNum, double power) {
 	if(motorNum < 0 || motorNum >= DUMMY_DEVICE_NUM_IO) {
-		printf("Invalid dummy motor!\n");
+		Log::logf(Log::WARN, "Invalid dummy motor!\n");
 		return;
 	}
 
 	if(!messages.limitReached(smpRateID)) {
-		printf("Dummy device setMotorPower() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device setMotorPower() called.\n");
 		messages.increment(smpRateID);
 		
 	}
 	if(!values.limitReached(smpValueRateID)) {
-		printf("Motor %d: %f\n", motorNum, power);
+		Log::logf(Log::DEBUG, "Motor %d: %f\n", motorNum, power);
 		values.increment(smpValueRateID);
 	}
 }
@@ -153,7 +153,7 @@ void DummyDevice::setMotorPower(unsigned char motorNum, double power) {
 //Dummy motor; output stop message to console
 void DummyDevice::stopMotors() {
 	if(!messages.limitReached(smRateID)) {
-		printf("Dummy device stopMotors() called.\n");
+		Log::logf(Log::DEBUG, "Dummy device stopMotors() called.\n");
 		messages.increment(smRateID);
 	}
 }

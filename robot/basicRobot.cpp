@@ -1,8 +1,8 @@
 //BasicRobot.cpp
 
 //Includes
-#include <stdio.h>
 #include "robot/basicRobot.h"
+#include "util/log.h"
 #include "device/device.h"
 #ifdef POLOLU
 	#include "device/pololu.h"
@@ -33,7 +33,7 @@ BasicRobot::BasicRobot() {
 }
 
 BasicRobot::BasicRobot(const char *deviceFile) {
-	printf("Output device file: %s\n", deviceFile);
+	Log::logf(Log::INFO, "Output device file: %s\n", deviceFile);
 	//Set up output device at specified filesystem location
 	#ifdef POLOLU
 		device = new Pololu(deviceFile);

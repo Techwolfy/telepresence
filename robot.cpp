@@ -1,7 +1,6 @@
 //Robot.cpp
 
 //Includes
-#include <stdio.h>
 #ifndef _WIN32
 	#include <dlfcn.h>
 #else
@@ -12,6 +11,7 @@
 #include <stdexcept>
 #include <jsoncpp/json/json.h>
 #include "robot.h"
+#include "util/log.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
 #include "robot/robotInterface.h"
@@ -90,23 +90,23 @@ void Robot::loadRobotLibrary(const char *filename) {
 	//Load library
 	robotLibrary = dlopen(filename, RTLD_LAZY);
 	if(!robotLibrary) {
-		printf("Failed to load robot library: %s\n", dlerror());
+		Log::logf(Log::ERR, "Failed to load robot library: %s\n", dlerror());
 		throw std::runtime_error("failed to load robot library");
 	} else {
-		printf("Loaded robot library: %s\n", filename);
+		Log::logf(Log::INFO, "Loaded robot library: %s\n", filename);
 	}
 
 	//Set up robot constructor
 	createInterface = (RobotInterface* (*)(const char *))dlsym(robotLibrary, "createRobot");
 	if(!createInterface) {
-		printf("Failed to load robot constructor: %s\n", dlerror());
+		Log::logf(Log::ERR, "Failed to load robot constructor: %s\n", dlerror());
 		throw std::runtime_error("failed to load robot constructor");
 	}
 
 	//Set up robot destructor
 	destroyInterface = (void (*)(RobotInterface*))dlsym(robotLibrary, "destroyRobot");
 	if(!destroyInterface) {
-		printf("Failed to load robot destructor: %s\n", dlerror());
+		Log::logf(Log::ERR, "Failed to load robot destructor: %s\n", dlerror());
 		throw std::runtime_error("failed to load robot destructor");
 	}
 #else	//Windows support
@@ -114,23 +114,23 @@ void Robot::loadRobotLibrary(const char *filename) {
 	robotLibrary = (/*HMODULE*/ void*)LoadLibrary(filename);
 
 	if(!robotLibrary) {
-		printf("Failed to load robot library: Win32 error %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Failed to load robot library: Win32 error %lu\n", GetLastError());
 		throw std::runtime_error("failed to load robot library");
 	} else {
-		printf("Loaded robot library: %s\n", filename);
+		Log::logf(Log::INFO, "Loaded robot library: %s\n", filename);
 	}
 
 	//Set up robot contructor
 	createInterface = (RobotInterface* (*)(const char *))GetProcAddress((HMODULE)robotLibrary, "createRobot");
 	if(!createInterface) {
-		printf("Failed to load robot constructor: Win32 error %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Failed to load robot constructor: Win32 error %lu\n", GetLastError());
 		throw std::runtime_error("failed to load robot constructor");
 	}
 
 	//Set up robot destructor
 	destroyInterface = (void (*)(RobotInterface*))GetProcAddress((HMODULE)robotLibrary, "destroyRobot");
 	if(!destroyInterface) {
-		printf("Failed to load robot destructor: Win32 error %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Failed to load robot destructor: Win32 error %lu\n", GetLastError());
 		throw std::runtime_error("failed to load robot destructor");
 	}
 #endif

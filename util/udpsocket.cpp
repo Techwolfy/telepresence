@@ -5,21 +5,21 @@
 #ifndef _WIN32	//Linux/POSIX support
 	#define IFPOSIX(x) x
 	#define IFWIN32(x)
-	#define PERROR(x) perror(x)
-	#define GAIERROR(x, y) printf(x ": %s\n", gai_strerror(y))
+	#define PERROR(x) Log::logf(Log::ERR, x ": %s\n", strerror(errno))
+	#define GAIERROR(x, y) Log::logf(Log::ERR, x ": %s\n", gai_strerror(y))
 #else			//Windows support
 	#define IFPOSIX(x)
 	#define IFWIN32(x) x
-	#define PERROR(x) printf(x ": %d\n", WSAGetLastError())
-	#define GAIERROR(x, y) printf(x ": %d\n", WSAGetLastError())
+	#define PERROR(x) Log::logf(Log::ERR, x ": %d\n", WSAGetLastError())
+	#define GAIERROR(x, y) Log::logf(Log::ERR, x ": %d\n", WSAGetLastError())
 #endif
 
 //Includes
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #ifndef _WIN32
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -30,6 +30,7 @@
 #endif
 #include <stdexcept>
 #include "util/udpsocket.h"
+#include "util/log.h"
 
 //Constructor
 UDPSocket::UDPSocket() : open(false),
@@ -41,7 +42,7 @@ UDPSocket::UDPSocket() : open(false),
 		//Initialize WinSock
 		WSADATA wsaData = {0};
 		if(WSAStartup(0x0202, &wsaData) != 0) {
-			printf("Error inializing WinSock2: %d\n", WSAGetLastError());
+			Log::logf(Log::ERR, "Error inializing WinSock2: %d\n", WSAGetLastError());
 			throw std::runtime_error("winsock2 initialization failed");
 		}
 #endif
@@ -87,7 +88,7 @@ int UDPSocket::openSocket(struct addrinfo *localAddr, struct addrinfo *remoteAdd
 	//Open socket
 	serverFD = socket(server->ai_family, SOCK_DGRAM, 0);
 	if(serverFD < 0) {
-		printf("Error opening socket!\n");
+		Log::logf(Log::ERR, "Error opening socket!\n");
 		return -1;
 	}
 
@@ -115,7 +116,7 @@ int UDPSocket::openSocket(struct addrinfo *localAddr, struct addrinfo *remoteAdd
 		return -1;
 	} else {
 		char buffer[NI_MAXHOST + NI_MAXSERV] = {0};	//Hostname, colon, service name (or port number), null character
-		printf("Bound to %s.\n", getAddrString((struct sockaddr *)&boundAddress, boundAddressLength, buffer, sizeof(buffer)));
+		Log::logf(Log::INFO, "Bound to %s.\n", getAddrString((struct sockaddr *)&boundAddress, boundAddressLength, buffer, sizeof(buffer)));
 	}
 
 	open = true;
@@ -141,7 +142,7 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 		localPort = "0";
 	}
 	if((gaiResult = getaddrinfo(localAddress, localPort, &hints, &local)) != 0) {
-		printf("Error finding local host: %s\n", gai_strerror(gaiResult));
+		Log::logf(Log::ERR, "Error finding local host: %s\n", gai_strerror(gaiResult));
 		return -1;
 	}
 
@@ -150,16 +151,16 @@ int UDPSocket::openSocket(const char *localAddress, const char *localPort, const
 		hints.ai_family = local->ai_family;	//Make sure the client connection uses the same address family as the server socket
 		hints.ai_flags &= ~AI_PASSIVE;		//Use value of remoteAddress
 		if((gaiResult = getaddrinfo(remoteAddress, remotePort, &hints, &remote)) != 0) {
-			printf("Error finding local host: %s\n", gai_strerror(gaiResult));
+			Log::logf(Log::ERR, "Error finding local host: %s\n", gai_strerror(gaiResult));
 			return -1;
 		}
 	}
 
 	//Print string representation of addrinfo structs
 	char buffer[NI_MAXHOST + NI_MAXSERV] = {0};
-	printf("Local host %s:%s found as %s.\n", (localAddress == NULL ? "0" : localAddress), (localPort == NULL ? "0" : localPort), getAddrString(local->ai_addr, local->ai_addrlen, buffer, sizeof(buffer)));
+	Log::logf(Log::INFO, "Local host %s:%s found as %s.\n", (localAddress == NULL ? "0" : localAddress), (localPort == NULL ? "0" : localPort), getAddrString(local->ai_addr, local->ai_addrlen, buffer, sizeof(buffer)));
 	if(remote != NULL) {
-		printf("Remote host %s:%s found as %s.\n", (remoteAddress == NULL ? "0" : remoteAddress), (remotePort == NULL ? "0" : remotePort), getAddrString(remote->ai_addr, remote->ai_addrlen, buffer, sizeof(buffer)));
+		Log::logf(Log::INFO, "Remote host %s:%s found as %s.\n", (remoteAddress == NULL ? "0" : remoteAddress), (remotePort == NULL ? "0" : remotePort), getAddrString(remote->ai_addr, remote->ai_addrlen, buffer, sizeof(buffer)));
 	}
 
 	//Open the socket
@@ -260,8 +261,8 @@ int UDPSocket::readData(void *data, int length, struct sockaddr *remote, socklen
 		return -1;
 	}
 	if(readLength > length IFWIN32(|| WSAGetLastError() == WSAEMSGSIZE)) {
-		printf("Received datagram larger than buffer!\n");
-		printf("Expected bytes: %d Received bytes: %d\n", length, readLength);
+		Log::logf(Log::WARN, "Received datagram larger than buffer!\n");
+		Log::logf(Log::WARN, "Expected bytes: %d Received bytes: %d\n", length, readLength);
 		return -1;
 	}
 
@@ -277,7 +278,7 @@ int UDPSocket::writeData(void *data, int length) {
 	if(client != NULL) {
 		return writeData(client->ai_addr, client->ai_addrlen, data, length);
 	} else {
-		printf("Error writing to socket!\n");
+		Log::logf(Log::ERR, "Error writing to socket!\n");
 		return -1;
 	}
 }

@@ -1,7 +1,6 @@
 //Server.cpp
 
 //Includes
-#include <stdio.h>
 #include <string.h>
 #include <chrono>
 #include <string>
@@ -15,6 +14,7 @@
 #endif
 #include <jsoncpp/json/json.h>
 #include "server.h"
+#include "util/log.h"
 #include "util/udpsocket.h"
 #include "util/watchdog.h"
 
@@ -40,21 +40,21 @@ Server::Server(const char *address, const char *port, const char *key, bool list
 		s.openSocket(NULL, NULL, address, port);
 	}
 	if(!s.isOpen()) {
-		printf("Socket initialization failed!\n");
+		Log::logf(Log::ERR, "Socket initialization failed!\n");
 		throw std::runtime_error("socket initialization failed");
 	} else {
-		printf("Socket initialized.\n");
+		Log::logf(Log::INFO, "Socket initialized.\n");
 	}
 
 	//Don't block on read so the main loop can check for SIGINT
 	if(s.blockRead(false) < 0) {
-		printf("Failed to set socket as nonblocking!\n");
+		Log::logf(Log::ERR, "Failed to set socket as nonblocking!\n");
 		throw std::runtime_error("socket initialization failed");
 	}
 
 	//Limit socket receive buffer to prevent excessive lag
 	if(s.setRecieveBufferLength(25) < 0) {	//Max delay of 500ms at 50 frames per second
-		printf("Failed to limit socket recieve buffer; if control loops run slowly, lag may build up over time.\n");
+		Log::logf(Log::WARN, "Failed to limit socket recieve buffer; if control loops run slowly, lag may build up over time.\n");
 	}
 
 	//Set up output packet
@@ -88,7 +88,7 @@ void Server::run() {
 		if(in.get("isClient", true).asBool()) {	//Data recieved from client
 			printData(in);
 		} else {
-			printf("Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
+			Log::logf(Log::DEBUG, "Packet %d recieved from robot.\n", in.get("frameNum", 0).asUInt());
 		}
 		ping["time"] = (Json::Value::Int64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		sendPing(&clientAddress, clientAddressLength);
@@ -122,16 +122,16 @@ void Server::run() {
 void Server::handlePing() {
 	if(listening) {
 		if(in.get("isClient", true).asBool()) {
-			printf("Ping %d received from client!\n", in.get("frameNum", 0).asUInt());
+			Log::logf(Log::DEBUG, "Ping %d received from client!\n", in.get("frameNum", 0).asUInt());
 			clientAddress = unknownAddress;
 			clientAddressLength = unknownAddressLength;
 		} else {
-			printf("Ping %d received from robot!\n", in.get("frameNum", 0).asUInt());
+			Log::logf(Log::DEBUG, "Ping %d received from robot!\n", in.get("frameNum", 0).asUInt());
 			robotAddress = unknownAddress;
 			robotAddressLength = unknownAddressLength;
 		}
 	} else {
-		printf("Ping %d recieved!\n", in.get("frameNum", 0).asUInt());
+		Log::logf(Log::DEBUG, "Ping %d recieved!\n", in.get("frameNum", 0).asUInt());
 	}
 	printLatency(in);
 }
@@ -151,12 +151,12 @@ bool Server::validateKey(Json::Value &data) {
 
 //Print the contents of a data packet to the console
 void Server::printData(Json::Value &data) {
-	printf("Client frame: %u\n", data.get("frameNum", 0).asUInt());
+	Log::logf(Log::DEBUG, "Client frame: %u\n", data.get("frameNum", 0).asUInt());
 	for(unsigned int i = 0; i < data["axes"].size(); i++) {
-		printf("Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
+		Log::logf(Log::DEBUG, "Axis %d: %f\n", i, data["axes"].get(i, 0.0).asDouble());
 	}
 	for(unsigned int i = 0; i < data["buttons"].size(); i++) {
-		printf("Button %d: %c\n", i, data["buttons"].get(i, false).asBool() ? 'T' : 'F');
+		Log::logf(Log::DEBUG, "Button %d: %c\n", i, data["buttons"].get(i, false).asBool() ? 'T' : 'F');
 	}
 }
 
@@ -164,5 +164,5 @@ void Server::printData(Json::Value &data) {
 void Server::printLatency(Json::Value &data) {
 	long long sent = data.get("time", 0).asUInt64();
 	long long now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	printf("Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", sent, now, sent - now);
+	Log::logf(Log::DEBUG, "Sent (ms): %lld, Received (ms): %lld, Latency (ms): %lld\n", sent, now, sent - now);
 }

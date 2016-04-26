@@ -9,6 +9,7 @@
 #include <chrono>
 #include <exception>
 #include <stdexcept>
+#include "util/log.h"
 #include "server.h"
 #include "client.h"
 #include "robot.h"
@@ -25,6 +26,7 @@ int main(int argc, char *argv[]) {
 	running = false;
 	long long elapsedTime = 0;
 	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	int logLevel = 2;
 	bool isClient = false;
 	bool isRobot = false;
 	char host[255] = "0.0.0.0";
@@ -40,8 +42,11 @@ int main(int argc, char *argv[]) {
 
 	//Process command-line options
 	int c = 0;
-	while((c = getopt(argc, argv, "hvscrla:p:k:dj:f:o:x:")) != -1) {
+	while((c = getopt(argc, argv, "hvi:scrla:p:k:dj:f:o:x:")) != -1) {
 		switch(c) {
+			case 'i':	//Log level
+				logLevel = atoi(optarg);
+				break;
 			case 's':	//Server mode
 				isClient = false;
 				isRobot = false;
@@ -102,11 +107,15 @@ int main(int argc, char *argv[]) {
 			strcpy(host, "127.0.0.1");
 	}
 
+	//Set up log
+	Log::setLevel((Log::loglevel_t)logLevel);
+	Log::logf(Log::INFO, "Log initialized!\n");
+
 	//Set up SIGINT handler
 	if(signal(SIGINT, signalHandler) != SIG_ERR) {
-		printf("SIGINT handler intialized!\n");
+		Log::logf(Log::INFO, "SIGINT handler intialized!\n");
 	} else {
-		printf("SIGINT handler intialization failed!\n");
+		Log::logf(Log::ERR, "SIGINT handler intialization failed!\n");
 		return EXIT_FAILURE;
 	}
 
@@ -122,7 +131,7 @@ int main(int argc, char *argv[]) {
 			} else if(file[0] != 0) {
 				telepresence = new Client(host, port, key, listen, file);
 			} else {
-				printf("Client input type not specified!\n");
+				Log::logf(Log::ERR, "Client input type not specified!\n");
 				throw std::runtime_error("missing client input type");
 			}
 		} else {
@@ -135,12 +144,12 @@ int main(int argc, char *argv[]) {
 					telepresence = new Robot(host, port, key, listen, libFile);
 				}
 			} else {
-				printf("Robot output type not specified!\n");
+				Log::logf(Log::ERR, "Robot output type not specified!\n");
 				throw std::runtime_error("missing robot output type");
 			}
 		}
 	} catch(std::exception &e) {
-		fprintf(stderr, "Fatal error creating main program object (%s), exiting!\n", e.what());
+		Log::logf(Log::ERR, "Fatal error creating main program object (%s), exiting!\n", e.what());
 		return EXIT_FAILURE;
 	}
 
@@ -166,6 +175,7 @@ void help() {
 	printf("Usage:\ttelepresence [mode] [options]\n");
 	printf("-h\t\tPrints this help message.\n");
 	printf("-v\t\tPrints this version message.\n");
+	printf("-i [level]\tChanges the log level (0 [errors] to 4 [verbose]; default: 2 [info])\n");
 	printf("-s\t\tRun in server mode (relaying data).\n");
 	printf("-c\t\tRun in client mode (controlling a robot).\n");
 	printf("-r\t\tRun in robot mode (controlled by a client).\n");
@@ -183,7 +193,7 @@ void help() {
 //Catch SIGINT and shut down properly
 void signalHandler(int signal) {
 	if(signal == SIGINT) {
-		printf("SIGINT received!\n");
+		Log::logf(Log::INFO, "SIGINT received!\n");
 		running = false;
 	}
 }

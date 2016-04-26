@@ -1,10 +1,10 @@
 //Serial.cpp
 
 //Includes
-#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #ifndef _WIN32
 	#include <termios.h>
 	#include <sys/select.h>
@@ -13,6 +13,7 @@
 #endif
 #include <stdexcept>
 #include "util/serial.h"
+#include "util/log.h"
 
 //Constructor
 #ifndef _WIN32
@@ -30,7 +31,7 @@ Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit
 		//http://linux.die.net/man/3/termios
 	fd = open(file, O_RDWR | O_NOCTTY);
 	if(fd < 0) {
-		printf("Serial connection initialization failed!\n");
+		Log::logf(Log::ERR, "Serial connection initialization failed!\n");
 		throw std::runtime_error("serial initialization failed");
 	}
 
@@ -67,11 +68,11 @@ Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit
 
 	//Flush serial port and apply settings
 	if(tcsetattr(fd, TCSAFLUSH, &tty) != 0) {
-		perror("Error applying serial port settings!\n");
+		Log::logf(Log::ERR, "Error applying serial port settings: %s\n", strerror(errno));
 		throw std::runtime_error("serial initialization failed");
 	}
 
-	printf("Serial connection initialized!\n");
+	Log::logf(Log::INFO, "Serial connection initialized!\n");
 }
 #else
 Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit, unsigned char readMinChars, unsigned char readTimeout) : handle(0),
@@ -81,7 +82,7 @@ Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit
 		//https://msdn.microsoft.com/en-us/library/ms810467.aspx
 	handle = CreateFile(file, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(handle < 0) {
-		printf("Error opening serial port: %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Error opening serial port: %lu\n", GetLastError());
 		throw std::runtime_error("serial initialization failed");
 	}
 
@@ -103,7 +104,7 @@ Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit
 	}
 	dcb.ErrorChar = '\0';
 	if(!SetCommState(handle, &dcb)) {
-		printf("Error applying serial port settings: %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Error applying serial port settings: %lu\n", GetLastError());
 		throw std::runtime_error("serial initialization failed");
 	}
 
@@ -122,11 +123,11 @@ Serial::Serial(const char *file, int baudRate, bool useParity, bool extraStopBit
 		}
 	}
 	if(!SetCommTimeouts(handle, &timeout)) {
-		printf("Error setting serial port timeout: %lu\n", GetLastError());
+		Log::logf(Log::ERR, "Error setting serial port timeout: %lu\n", GetLastError());
 		throw std::runtime_error("serial initialization failed");
 	}
 
-	printf("Serial connection initialized!\n");
+	Log::logf(Log::INFO, "Serial connection initialized!\n");
 }
 #endif
 

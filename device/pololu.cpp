@@ -1,9 +1,9 @@
 //Pololu.cpp
 
 //Includes
-#include <stdio.h>
 #include <stdexcept>
 #include "device/pololu.h"
+#include "util/log.h"
 
 //Constructor
 Pololu::Pololu() : Pololu("/dev/ttyACM0") {
@@ -15,7 +15,7 @@ Pololu::Pololu(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 	//Serial connection is 115200 8 N 1, full duplex
 		//https://www.pololu.com/docs/0J40/5.b
 
-	printf("Pololu Maestro servo controller initialized!\n");
+	Log::logf(Log::INFO, "Pololu Maestro servo controller initialized!\n");
 
 	//Make sure all motors are stopped
 	stopMotors();
@@ -55,21 +55,21 @@ unsigned short Pololu::scalePower(double power) {
 //Get power of a specific channel
 unsigned short Pololu::getPower(unsigned char channel) {
 	if(channel > POLOLU_NUM_MOTORS) {
-		printf("Invalid PWM channel!\n");
+		Log::logf(Log::WARN, "Invalid PWM channel!\n");
 		return 0;
 	}
 
 	unsigned char command[2] = {0x90, channel};
 	//Command byte, channel byte
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Pololu Maestro servo controller!\n");
+		Log::logf(Log::ERR, "Error writing to Pololu Maestro servo controller!\n");
 	}
 
 	unsigned char data[2] = {0};
 	if(serialRead(&data, sizeof(data)) == sizeof(data)) {
 		return (data[0] << 8) | data[1];
 	} else {
-		printf("Error reading from Pololu Maestro servo controller!\n");
+		Log::logf(Log::ERR, "Error reading from Pololu Maestro servo controller!\n");
 		return 0;
 	}
 }
@@ -77,13 +77,13 @@ unsigned short Pololu::getPower(unsigned char channel) {
 //Set power of a specific channel
 void Pololu::setPower(unsigned char channel, unsigned short power) {
 	if(channel > POLOLU_NUM_MOTORS) {
-		printf("Invalid PWM channel!\n");
+		Log::logf(Log::WARN, "Invalid PWM channel!\n");
 		return;
 	}
 
 	unsigned char command[4] = {0x84, channel, (unsigned char)(power & 0x7F), (unsigned char)((power >> 7) & 0x7F)};
 	//Command byte, channel byte, target low 7 bits, target high 7 bits
 	if(serialWrite(&command, sizeof(command)) != sizeof(command)) {
-		printf("Error writing to Pololu Maestro servo controller!\n");
+		Log::logf(Log::ERR, "Error writing to Pololu Maestro servo controller!\n");
 	}
 }

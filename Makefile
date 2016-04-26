@@ -14,7 +14,7 @@ AR=
 CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -Wall -Werror -I. -g
 SHARED=-fPIC -shared
 LIBS=
-OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
+OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o log.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
 ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o
 JSONCPPDIR=
 ifneq ($(OS), Windows_NT)	#Linux/POSIX support
