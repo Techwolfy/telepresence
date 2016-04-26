@@ -91,7 +91,7 @@ void Client::run() {
 	for(int i = 0; i < controller->getNumButtons(); i++) {
 		out["buttons"][i] = controller->getButton(i);
 	}
-	out["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	out["time"] = (Json::Value::Int64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 	//Send data to robot
 	std::string outJSON = writer.write(out);
@@ -104,7 +104,7 @@ void Client::run() {
 
 //Ping the server
 void Client::sendPing() {
-	ping["time"] = (Json::Value::UInt64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	ping["time"] = (Json::Value::Int64)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	if(listening) {
 		sendPing(&robotAddress, robotAddressLength);
 	} else {
