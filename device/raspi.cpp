@@ -9,8 +9,8 @@
 
 //Constructor
 RasPi::RasPi() : fd(0) {
-	//Set up Pi-Blaster
-	fd = open("/dev/pi-blaster", O_WRONLY);
+	//Set up ServoBlaster
+	fd = open("/dev/servoblaster", O_WRONLY);
 	if(fd < 0) {
 		Log::logf(Log::ERR, "Error opening ServoBlaster!\n");
 		throw std::runtime_error("raspi servoblaster initialization failed");

@@ -1,19 +1,18 @@
-#ifndef REDROBOT_H
-#define REDROBOT_H
+#ifndef NAZAROBOT_H
+#define NAZAROBOT_H
 
 //Includes
 #include "robot/robotInterface.h"
-#include "device/pololu.h"
+#include "device/raspi.h"
 
 //Declaration
-class RedRobot : public RobotInterface {
+class NazaRobot : public RobotInterface {
 public:
 	//Constructor
-	RedRobot();
-	RedRobot(const char *pololuFile);
+	NazaRobot();
 
 	//Destructor
-	~RedRobot();
+	~NazaRobot();
 
 	//Functions
 	void run(int numAxes, double axes[], int numButtons, bool buttons[]);
@@ -21,7 +20,7 @@ public:
 
 private:
 	//Variables
-	Pololu *device;
+	RasPi *device;
 };
 
-#endif //REDROBOT_H
+#endif //NAZAROBOT_H

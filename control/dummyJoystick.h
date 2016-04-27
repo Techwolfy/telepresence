@@ -23,10 +23,10 @@ public:
 
 private:
 	//Constants
-	static const int DUMMY_JOY_AXES;
-	static const int DUMMY_JOY_BUTTONS;
-	static const double DUMMY_JOY_AXIS_VALUE;
-	static const bool DUMMY_JOY_BUTTON_VALUE;
+	static const int DUMMY_JOY_AXES = 3;
+	static const int DUMMY_JOY_BUTTONS = 10;
+	static constexpr double DUMMY_JOY_AXIS_VALUE = 0.5;
+	static const bool DUMMY_JOY_BUTTON_VALUE = true;
 
 	//Variables
 	Ratelimit messages;

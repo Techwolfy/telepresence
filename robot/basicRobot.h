@@ -20,6 +20,7 @@ public:
 	void stop();
 
 private:
+	//Variables
 	Device *device;
 };
 

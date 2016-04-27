@@ -5,12 +5,6 @@
 #include "util/log.h"
 #include "util/ratelimit.h"
 
-//Constants
-const int DummyJoystick::DUMMY_JOY_AXES = 3;
-const int DummyJoystick::DUMMY_JOY_BUTTONS = 10;
-const double DummyJoystick::DUMMY_JOY_AXIS_VALUE = 0.5;
-const bool DummyJoystick::DUMMY_JOY_BUTTON_VALUE = true;
-
 //Constructor
 DummyJoystick::DummyJoystick() : messages(500, 1) {
 	updateRateID = messages.getID();

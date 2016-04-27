@@ -2,7 +2,6 @@
 
 //Includes
 #include "robot/redRobot.h"
-#include "device/device.h"
 #include "device/pololu.h"
 
 //Constructor
@@ -23,7 +22,11 @@ RedRobot::~RedRobot() {
 
 //Shared library constructor
 extern "C" RobotInterface* createRobot(const char *options) {
-	return new RedRobot();
+	if(options != NULL) {
+		return new RedRobot(options);
+	} else {
+		return new RedRobot();
+	}
 }
 
 //Shared library destructor
