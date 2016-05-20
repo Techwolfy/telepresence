@@ -62,5 +62,5 @@ void RasPi::setPower(unsigned int channel, unsigned int power) {
 	//1.0ms full reverse, 1.5ms neural, 2.0ms full forward
 	char command[7] = {0};
 	snprintf(command, sizeof(command), "%u=%u\n", channel, power);
-	write(fd, command, sizeof(command));
+	write(fd, command, sizeof(command) - 1);	//Strip null character when writing
 }

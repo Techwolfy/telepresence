@@ -15,7 +15,7 @@ CFLAGS=-std=c++11 -ffunction-sections -fdata-sections -Wl,--gc-sections -Wall -W
 SHARED=-fPIC -shared
 LIBS=
 OBJS=telepresence.o server.o client.o robot.o udpsocket.o serial.o watchdog.o ratelimit.o log.o dummyJoystick.o joystick.o controlFile.o dummyDevice.o parallax.o pololu.o arduino.o raspi.o
-ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o redRobot.o quadcopterRobot.o nazaRobot.o
+ROBOTS=dummyRobot.o basicRobot.o parallaxRobot.o pololuRobot.o arduinoRobot.o raspiRobot.o redRobot.o quadcopterRobot.o
 JSONCPPDIR=
 ifneq ($(OS), Windows_NT)	#Linux/POSIX support
 	CXX+=g++
@@ -44,7 +44,7 @@ BUILDROBOTS=$(addprefix build/, $(ROBOTS))
 
 #Build everything
 .PHONY: all
-all: osdetect bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so bin/red.so bin/quadcopter.so bin/naza.so
+all: osdetect bin/telepresence bin/dummy.so bin/parallax.so bin/pololu.so bin/arduino.so bin/raspi.so bin/red.so bin/quadcopter.so
 
 #Print OS version of build
 .PHONY: osdetect

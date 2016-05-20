@@ -19,12 +19,12 @@ QuadcopterRobot::QuadcopterRobot() : throttle(0.0),
 	device = new RasPi();
 
 	//Enable ESCs
-	for(int i = 4; i <= 7; i++) {
-		device->setMotorPower(i, 1.0);
+	for(int i = 3; i <= 6; i++) {
+		device->setMotorPower(i, scaleQuad(1.0));
 	}
 	usleep(1000);
-	for(int i = 4; i <= 7; i++) {
-		device->setMotorPower(i, 0.0);
+	for(int i = 3; i <= 6; i++) {
+		device->setMotorPower(i, scaleQuad(0.0));
 	}
 	usleep(1000);
 
@@ -58,6 +58,12 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 		yaw = values[0];		//Joystick 0,X (Rotate Clockwise/Counterclockwise)
 	}
 
+	if(throttle < 0.0) {
+		throttle = 0.0;
+	} else {
+		throttle *= 0.5;
+	}
+
 	//Optionally disable rotation (allows easier throttle control)
 	if(numButtons >= 3 && buttons[2]) {
 		yaw = 0.0;
@@ -74,15 +80,15 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 		stop();
 	} else if(numButtons >= 2 && buttons[1]) {	//Quadcopter enabled (test mode)
 		//Set all propellers to 20% power
+		device->setMotorPower(3, scaleQuad(0.2));
 		device->setMotorPower(4, scaleQuad(0.2));
 		device->setMotorPower(5, scaleQuad(0.2));
 		device->setMotorPower(6, scaleQuad(0.2));
-		device->setMotorPower(7, scaleQuad(0.2));
 	} else {									//Quadcopter enabled (flight mode)
-		device->setMotorPower(4, scaleQuad(fr));
-		device->setMotorPower(5, scaleQuad(fl));
-		device->setMotorPower(6, scaleQuad(br));
-		device->setMotorPower(7, scaleQuad(bl));
+		device->setMotorPower(3, fr);
+		device->setMotorPower(4, fl);
+		device->setMotorPower(5, br);
+		device->setMotorPower(6, bl);
 	}
 }
 
