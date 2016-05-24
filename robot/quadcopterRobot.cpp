@@ -75,6 +75,8 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 	fl = (2/3)*throttle + (1/(3*max))*(+pitch -roll +yaw);
 	br = (2/3)*throttle + (1/(3*max))*(-pitch +roll +yaw);
 	bl = (2/3)*throttle + (1/(3*max))*(-pitch -roll -yaw);
+	Log::logf(Log::DEBUG, "Throttle: %f, Yaw: %f, Roll: %f, Pitch: %f", throttle, yaw, roll, pitch);
+	Log::logf(Log::DEBUG, "FR: %f, FL: %f, BR: %f, BL: %f", fr, fl, br, bl);
 
 	if(numButtons <= 0 || (numButtons >= 1 && !buttons[0])) {	//Quadcopter disabled
 		stop();
@@ -85,16 +87,16 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 		device->setMotorPower(5, scaleQuad(0.2));
 		device->setMotorPower(6, scaleQuad(0.2));
 	} else {									//Quadcopter enabled (flight mode)
-		device->setMotorPower(3, fr);
-		device->setMotorPower(4, fl);
-		device->setMotorPower(5, br);
-		device->setMotorPower(6, bl);
+		//device->setMotorPower(3, fr);
+		//device->setMotorPower(4, fl);
+		//device->setMotorPower(5, br);
+		//device->setMotorPower(6, bl);
 	}
 }
 
 //Stop motors
 void QuadcopterRobot::stop() {
-	for(int i = 4; i <= 7; i++) {
+	for(int i = 3; i <= 6; i++) {
 		device->setMotorPower(i, scaleQuad(0.0));
 	}
 }

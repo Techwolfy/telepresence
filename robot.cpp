@@ -31,7 +31,7 @@ Robot::Robot(const char *address, const char *port, const char *key, bool listen
 }
 
 Robot::Robot(const char *address, const char *port, const char *key, bool listen, const char *libFile, const char *libOptions) : Server(address, port, key, listen),
-																																 watchdog(500, false),
+																																 watchdog(100, false),	//5 packets
 																																 robotLibrary(NULL),
 																																 robotInterface(NULL),
 																																 axesSize(0),
