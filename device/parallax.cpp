@@ -25,14 +25,11 @@ Parallax::Parallax(const char *file) : Serial(file, 2400, false, true, 8, 1) {
 	}
 
 	Log::logf(Log::INFO, "Parallax initialized! Firmware Version: %.1f\n", getVersion());
-
-	//Make sure all motors are stopped
-	stopMotors();
 }
 
 //Destructor
 Parallax::~Parallax() {
-	stopMotors();
+
 }
 
 //Functions

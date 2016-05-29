@@ -19,6 +19,10 @@ QuadcopterRobot::QuadcopterRobot() : throttle(0.0),
 	device = new RasPi();
 
 	//Enable ESCs
+	//FR: 3 (BCM27, Pin 13)
+	//FL: 4 (BCM22, Pin 15)
+	//BR: 5 (BCM23, Pin 16)
+	//BL: 6 (BCM24, Pin 18)
 	for(int i = 3; i <= 6; i++) {
 		device->setMotorPower(i, scaleQuad(1.0));
 	}
@@ -50,48 +54,79 @@ extern "C" void destroyRobot(RobotInterface *interface) {
 //Functions
 //Run motors
 void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool buttons[]) {
-	//Retreive joystick values for flight calculations
-	if(numValues >= 3) {
-		throttle = values[1];	//Joystick 0,Y (Up/Down)
-		pitch = values[3];		//Joystick 1,Y (Front/Back)
-		roll = values[2];		//Joystick 1,X (Left/Right)
-		yaw = values[0];		//Joystick 0,X (Rotate Clockwise/Counterclockwise)
-	}
+	//Button map
+	//0 1 2 -> | Enable |Forward |Throttle|
+	//3 4 5 -> |  Left  | Hover  | Right  |
+	//6 7 8 -> |SpinCCW |Backward| SpinCW |
+	//  9   -> |++++++++|Joystick|++++++++|
+	double buttonPowerAdjust = 0.1;
 
-	if(throttle < 0.0) {
+	//Start control values at 0 each frame
+	throttle = 0.0;
+	roll = 0.0;
+	pitch = 0.0;
+	yaw = 0.0;
+
+	if(numButtons <= 0 || (numButtons >= 1 && !buttons[0])) {	//Quadcopter disabled
 		throttle = 0.0;
-	} else {
-		throttle *= 0.5;
-	}
+		roll = 0.0;
+		pitch = 0.0;
+		yaw = 0.0;
+	} else if(numButtons >= 10 && !buttons[9]) {	//Quadcopter enabled (button mode)
+		//Velocity control buttons
+		if(buttons[1]) {
+			pitch += buttonPowerAdjust;
+		}
+		if(buttons[7]) {
+			pitch += -buttonPowerAdjust;
+		}
+		if(buttons[3]) {
+			roll += buttonPowerAdjust;
+		}
+		if(buttons[5]) {
+			roll += -buttonPowerAdjust;
+		}
+		if(buttons[6]) {
+			yaw += buttonPowerAdjust;
+		}
+		if(buttons[8]) {
+			yaw += -buttonPowerAdjust;
+		}
 
-	//Optionally disable rotation (allows easier throttle control)
-	if(numButtons >= 3 && buttons[2]) {
+		//Throttle control buttons
+		if(buttons[2]) {
+			throttle += buttonPowerAdjust;
+		}
+		if(buttons[4]) {
+			throttle += buttonPowerAdjust;
+		}
+	} else if(buttons[9] && numValues >= 3) {	//Quadcopter enabled (joystick mode)
+		//Retreive joystick values for flight control
+		//FIXME: Temporarily disabled!
+		//throttle = convJoystick(values[1], 0.5);	//Joystick 0,Y (Up/Down)
+		//pitch = convJoystick(values[3], 0.5);		//Joystick 1,Y (Front/Back)
+		//roll = convJoystick(values[2], 0.5);		//Joystick 1,X (Left/Right)
+		//yaw = convJoystick(values[0], 0.5);			//Joystick 0,X (Rotate Clockwise/Counterclockwise)
+	} else {	//Invalid case, disable motors
+		throttle = 0.0;
+		roll = 0.0;
+		pitch = 0.0;
 		yaw = 0.0;
 	}
 
 	//Calculate speeds for each motor
-	max = abs(pitch) + abs(roll) + abs(yaw);
-	fr = (2/3)*throttle + (1/(3*max))*(+pitch +roll -yaw);
-	fl = (2/3)*throttle + (1/(3*max))*(+pitch -roll +yaw);
-	br = (2/3)*throttle + (1/(3*max))*(-pitch +roll +yaw);
-	bl = (2/3)*throttle + (1/(3*max))*(-pitch -roll -yaw);
+	fr = throttle +pitch +yaw;
+	fl = throttle +roll -yaw;
+	br = throttle -pitch +yaw;
+	bl = throttle -roll -yaw;
 	Log::logf(Log::DEBUG, "Throttle: %f, Yaw: %f, Roll: %f, Pitch: %f", throttle, yaw, roll, pitch);
 	Log::logf(Log::DEBUG, "FR: %f, FL: %f, BR: %f, BL: %f", fr, fl, br, bl);
 
-	if(numButtons <= 0 || (numButtons >= 1 && !buttons[0])) {	//Quadcopter disabled
-		stop();
-	} else if(numButtons >= 2 && buttons[1]) {	//Quadcopter enabled (test mode)
-		//Set all propellers to 20% power
-		device->setMotorPower(3, scaleQuad(0.2));
-		device->setMotorPower(4, scaleQuad(0.2));
-		device->setMotorPower(5, scaleQuad(0.2));
-		device->setMotorPower(6, scaleQuad(0.2));
-	} else {									//Quadcopter enabled (flight mode)
-		//device->setMotorPower(3, fr);
-		//device->setMotorPower(4, fl);
-		//device->setMotorPower(5, br);
-		//device->setMotorPower(6, bl);
-	}
+	//Run motors
+	device->setMotorPower(3, scaleQuad(fr));
+	device->setMotorPower(4, scaleQuad(fl));
+	device->setMotorPower(5, scaleQuad(br));
+	device->setMotorPower(6, scaleQuad(bl));
 }
 
 //Stop motors
@@ -110,4 +145,15 @@ double QuadcopterRobot::scaleQuad(double power) {
 	}
 
 	return (power * 2.0) - 1.0;
+}
+
+//Convert input from joystick to quadcopter ESC input range
+double QuadcopterRobot::convJoystick(double joy, double scale) {
+	//[-1.0, 1.0] to [0.0, 1.0]
+	joy += 1.0;
+	joy /= 2.0;
+
+	//Scale value to limit range (e.g. 0.5 -> [0.0, 0.5])
+	joy *= scale;
+	return joy;
 }

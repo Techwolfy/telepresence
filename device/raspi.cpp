@@ -16,15 +16,11 @@ RasPi::RasPi() : fd(0) {
 		throw std::runtime_error("raspi servoblaster initialization failed");
 	}
 
-	//Make sure all motors are stopped
-	stopMotors();
-
 	Log::logf(Log::INFO, "ServoBlaster GPIO Software PWM initialized!\n");
 }
 
 //Destructor
 RasPi::~RasPi() {
-	stopMotors();
 	close(fd);
 }
 
@@ -63,4 +59,5 @@ void RasPi::setPower(unsigned int channel, unsigned int power) {
 	char command[7] = {0};
 	snprintf(command, sizeof(command), "%u=%u\n", channel, power);
 	write(fd, command, sizeof(command) - 1);	//Strip null character when writing
+	Log::logf(Log::DEBUG, "%s", command);	//Debug print
 }

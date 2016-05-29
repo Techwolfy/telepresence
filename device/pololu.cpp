@@ -16,14 +16,11 @@ Pololu::Pololu(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 		//https://www.pololu.com/docs/0J40/5.b
 
 	Log::logf(Log::INFO, "Pololu Maestro servo controller initialized!\n");
-
-	//Make sure all motors are stopped
-	stopMotors();
 }
 
 //Destructor
 Pololu::~Pololu() {
-	stopMotors();
+
 }
 
 //Functions

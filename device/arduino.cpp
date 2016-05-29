@@ -16,14 +16,11 @@ Arduino::Arduino(const char *file) : Serial(file, 115200, false, false, 2, 0) {
 		//https://www.arduino.cc/en/Serial/Begin
 
 	Log::logf(Log::INFO, "Arduino initialized!\n");
-
-	//Make sure all motors are stopped
-	stopMotors();
 }
 
 //Destructor
 Arduino::~Arduino() {
-	stopMotors();
+
 }
 
 //Functions

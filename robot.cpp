@@ -69,6 +69,7 @@ Robot::Robot(const char *address, const char *port, const char *key, bool listen
 
 //Destructor
 Robot::~Robot() {
+	robotInterface->stop();
 	destroyInterface(robotInterface);
 
 #ifndef _WIN32	//Linux/POSIX shared library destructor
