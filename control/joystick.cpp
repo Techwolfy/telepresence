@@ -80,7 +80,7 @@ Joystick::Joystick(int joyNum) : joyFD(joyNum),
 	strncpy(name, capabilities.szPname, sizeof(name));
 
 	//Set up joyEvent
-	joyEvent.dwSize = sizeof(JOYINFO);
+	joyEvent.dwSize = sizeof(JOYINFOEX);
 	joyEvent.dwFlags = JOY_RETURNALL;
 #endif
 
@@ -151,8 +151,8 @@ void Joystick::update() {
 		}
 
 		//Separate and update button values via bitmask
-		for(unsigned long i = 0x1; i <= 0x80000000 && i != 0x0; i <<= 1) {	//Bit-shift once for each button, end after either bit 32 or integer rollover
-			buttons[i] = joyEvent.dwButtons & i;
+		for(int i = 0; i < numButtons; i++) {	//Bit-shift once for each button
+			buttons[i] = (joyEvent.dwButtons & (0x1 << i)) > 1;	//Check if flag is set
 		}
 	}
 #endif
@@ -171,7 +171,15 @@ int Joystick::getNumButtons() {
 //Retrieve the value of a specific axis of the connected joystick
 double Joystick::getAxis(int axis) {
 	if(axis < numAxes) {
+#ifndef _WIN32
 		return -(double)axes[axis] / SHRT_MAX;
+#else
+		if(axis % 2 == 0) {		//Only Y-axes are inverted on Windows
+			return (double)(axes[axis] - SHRT_MAX) / SHRT_MAX;
+		} else {
+			return -(double)(axes[axis] - SHRT_MAX) / SHRT_MAX;
+		}
+#endif
 	} else {
 		return 0.0;
 	}

@@ -33,7 +33,6 @@ private:
 
 	//Functions
 	double scaleQuad(double power);
-	double convJoystick(double joy, double scale);
 };
 
 #endif //QUADCOPTERROBOT_H

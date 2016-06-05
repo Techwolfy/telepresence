@@ -60,6 +60,7 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 	//6 7 8 -> |SpinCCW |Backward| SpinCW |
 	//  9   -> |++++++++|Joystick|++++++++|
 	double buttonPowerAdjust = 0.1;
+	double joystickScale = 0.2;
 
 	//Start control values at 0 each frame
 	throttle = 0.0;
@@ -102,11 +103,11 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 		}
 	} else if(buttons[9] && numValues >= 3) {	//Quadcopter enabled (joystick mode)
 		//Retreive joystick values for flight control
-		//FIXME: Temporarily disabled!
-		//throttle = convJoystick(values[1], 0.5);	//Joystick 0,Y (Up/Down)
-		//pitch = convJoystick(values[3], 0.5);		//Joystick 1,Y (Front/Back)
-		//roll = convJoystick(values[2], 0.5);		//Joystick 1,X (Left/Right)
-		//yaw = convJoystick(values[0], 0.5);			//Joystick 0,X (Rotate Clockwise/Counterclockwise)
+		throttle = values[1] * joystickScale;	//Joystick 0,Y (Up/Down)
+		pitch = values[3] * joystickScale;		//Joystick 1,Y (Front/Back)
+		roll = values[2] * joystickScale;		//Joystick 1,X (Left/Right)
+		yaw = values[0] * joystickScale;		//Joystick 0,X (Rotate Clockwise/Counterclockwise)
+		throttle *= (values[1] < 0) ? -1 : 1;	//Absolute value (restricts input to [0, joystickScale])
 	} else {	//Invalid case, disable motors
 		throttle = 0.0;
 		roll = 0.0;
@@ -115,10 +116,10 @@ void QuadcopterRobot::run(int numValues, double values[], int numButtons, bool b
 	}
 
 	//Calculate speeds for each motor
-	fr = throttle +pitch +yaw;
-	fl = throttle +roll -yaw;
-	br = throttle -pitch +yaw;
-	bl = throttle -roll -yaw;
+	fr = throttle + pitch + yaw;
+	fl = throttle + roll - yaw;
+	br = throttle - pitch + yaw;
+	bl = throttle - roll - yaw;
 	Log::logf(Log::DEBUG, "Throttle: %f, Yaw: %f, Roll: %f, Pitch: %f", throttle, yaw, roll, pitch);
 	Log::logf(Log::DEBUG, "FR: %f, FL: %f, BR: %f, BL: %f", fr, fl, br, bl);
 
@@ -140,20 +141,9 @@ void QuadcopterRobot::stop() {
 double QuadcopterRobot::scaleQuad(double power) {
 	if(power < 0.0) {
 		power = 0.0;
-	} else if(power > 1.0) {
-		power = 1.0;
+	} else if(power > 0.5) {	//Power cap; prevents quadcopter from lifting off unintentionally
+		power = 0.5;
 	}
 
 	return (power * 2.0) - 1.0;
-}
-
-//Convert input from joystick to quadcopter ESC input range
-double QuadcopterRobot::convJoystick(double joy, double scale) {
-	//[-1.0, 1.0] to [0.0, 1.0]
-	joy += 1.0;
-	joy /= 2.0;
-
-	//Scale value to limit range (e.g. 0.5 -> [0.0, 0.5])
-	joy *= scale;
-	return joy;
 }
